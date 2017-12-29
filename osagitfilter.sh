@@ -19,23 +19,24 @@ trap finish EXIT
 
 function usage {
 	echo "---=[ $SCRIPT_NAME - v$SCRIPT_VER ]=----------------------------------------------"
-	echo "usage: $SCRIPT_NAME --clean [--forbidden FORBIDDEN] [FILE]  #translates OSA script to text, FORBIDDEN is colon-seperated">&2
-	echo "       $SCRIPT_NAME --smudge [FILE]   #translates text to OSA script">&2
+	echo "usage: $SCRIPT_NAME --clean [--forbidden FORBIDDEN] [FILE]  #translates OSA script to text, FORBIDDEN is colon-seperated"
+	echo "       $SCRIPT_NAME --smudge [FILE]   #translates text to OSA script"
 	if [[ $# > 0 ]]; then
-		printf "\nERROR: %s\n" "$1">&2
+		ERROR 1 "$@"
 	fi
-	exit 1
+	exit 0
 }
 
 function debug {
-	[[ $DEBUG = 1 ]] && printf "DEBUG: %s\n" "$@">&2
+	[[ $DEBUG = 1 ]] && >&2 printf "DEBUG: %s\n" "$@"
 	[[ $DEBUG = 2 ]] && printf "%s\n" "$@">>$SCRATCH/tmp.log
 }
 
 function ERROR {
 	ERR_NR=$1
 	shift
-	echo "ERROR: $@">&2
+	>&2 echo "ERROR: $@"
+	debug "ERROR($ERR_NR): $@"
 	exit $ERR_NR
 }
 
@@ -77,6 +78,7 @@ SCRATCH=$(mktemp -d -t osagitfilter.tmp)
 
 debug "---=[ $SCRIPT_NAME - v$SCRIPT_VER ]=----------------------------------------------"
 debug "started: $(date '+%Y-%m-%d %H:%M:%S')"
+debug "sw_vers: $(sw_vers | tr -d '\t' | tr '\n' ';')"
 debug "call: $CALLED_WITH"
 debug "caller: $(ps -o args= $PPID)" #see: https://stackoverflow.com/a/26985984/56
 debug "scratch: $SCRATCH"
@@ -93,12 +95,12 @@ if [[ $CMD = clean ]]; then
 	#determine osa-language of input file
 	OSA_LANG=$($OSA_GET_LANG_CMD $CLEAN_SCPT_FILE)
 	debug "OSA lang: $OSA_LANG"
-	debug "forbidden: ${FORBIDDEN[@]}"
+	debug "forbidden langs: ${FORBIDDEN[@]}"
 
 	#check if the osa-lang is forbidden
 	for BL in "${FORBIDDEN[@]}"; do
 		if [[ $BL = $OSA_LANG ]]; then
-			ERROR 1 "OSA language '$BL' is forbidden by $SCRIPT_NAME">&2
+			ERROR 1 "OSA language '$BL' is forbidden by $SCRIPT_NAME"
 		fi
 	done
 

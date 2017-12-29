@@ -1,0 +1,3 @@
+---=[ osagitfilter - v0.4 ]=----------------------------------------------
+usage: osagitfilter --clean [--forbidden FORBIDDEN] [FILE]  #translates OSA script to text, FORBIDDEN is colon-seperated
+       osagitfilter --smudge [FILE]   #translates text to OSA script
