@@ -19,8 +19,8 @@ Install the filter by running the following command:
 
 Configure the filter by running [git config][gitconfig] (with or without the `--global` argument):
 
-	git config --global filter.osa.clean "osagitfilter.sh --clean %f"
-	git config --global filter.osa.smudge "osagitfilter.sh --smudge %f"
+	git config --global filter.osa.clean "osagitfilter --clean %f"
+	git config --global filter.osa.smudge "osagitfilter --smudge %f"
 	git config --global filter.osa.required "true"
 
 
@@ -35,3 +35,9 @@ Put the next line in your [gitattributes][]:
 [asdbg-forum]: http://forum.latenightsw.com/t/cross-play-between-script-debugger-and-script-editor/834/5
 [gitconfig]: https://git-scm.com/docs/git-config
 [gitattributes]: https://git-scm.com/book/en/v2/Customizing-Git-Git-Attributes
+
+
+Developer info
+--------------
+
+Because of the test files, don't put `osagitfilter` on this git repository.

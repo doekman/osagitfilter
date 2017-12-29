@@ -4,13 +4,14 @@ function usage {
 	if [[ $# > 0 ]]; then
 		printf "ERROR: %s\n\n" "$1">&2
 	fi
-	echo "Usage: $SCRIPT_NAME --clean FILE [--blacklist BLACKLIST]   #translates OSA-script to text, BLACKLIST is colon-seperated"
-	echo "       $SCRIPT_NAME --smudge FILE   #translates text to OSA-script"
+	echo "Usage: $SCRIPT_NAME --clean FILE [--blacklist BLACKLIST]   #translates OSA-script to text, BLACKLIST is colon-seperated">&2
+	echo "       $SCRIPT_NAME --smudge FILE   #translates text to OSA-script">&2
 	exit 1
 }
 
 function debug {
-	[[ $DEBUG = 1 ]] && echo "DEBUG: $@">&2
+	[[ $DEBUG = 1 ]] && printf "DEBUG: %s\n" "$@">&2
+	[[ $DEBUG = 2 ]] && printf "%s\n" "$@">>$LOG_PATH/$SCRIPT_NAME.log
 }
 
 function ERROR {
@@ -21,26 +22,36 @@ function ERROR {
 }
 
 SCRIPT_NAME=$(basename $0 .sh)
-IFS=':'
+LOG_PATH=~/Library/Logs/Catsdeep/
+OSA_GET_LANG=osagetlang
 DEBUG=0
 CMD=
 FILE=
 OSA_LANG=AppleScript #default language
-BLACKLIST=("AppleScript Debugger")
+OLD_IFS=
+BLACKLIST_TEXT="AppleScript Debugger" #colon seperated list
 while (( $# > 0 )) ; do
   case $1 in
 	-c | --clean)  [[ $# > 1 ]] || usage "FILE argument expected after $1"; CMD=clean; FILE=$2; shift;;
 	-s | --smudge) [[ $# > 1 ]] || usage "FILE argument expected after $1"; CMD=smudge; FILE=$2; shift;;
-	-b | --blacklist) [[ $# > 1 ]] || usage "BLACKLIST argument expected after $1"; BLACKLIST=($2); shift;;
+	-b | --blacklist) [[ $# > 1 ]] || usage "BLACKLIST argument expected after $1"; BLACKLIST_TEXT=$2; shift;;
 	-d | --debug) DEBUG=1;;
+	-l | --log) DEBUG=2;;
 	-h | -\? | --help) usage;;
 	*) usage "Unrecognized argument '$1'";;
   esac
   shift
 done
+debug "---=[ ${SCRIPT_NAME} ]=---"
+debug "Started: $(date '+%Y-%m-%d %H:%M:%S')"
+# 
+IFS=:
+BLACKLIST=($BLACKLIST_TEXT)
+IFS=' 	
+'
 
 [[ $CMD ]] || usage "No command supplied"
-[[ -f "$FILE" ]] || usage "File '$FILE' doesn't exist"
+[[ -d "$LOG_PATH" ]] || mkdir -p "$LOG_PATH"
 
 for BL in "${BLACKLIST[@]}"; do
 	if [[ $BL = $OSA_LANG ]]; then
@@ -49,13 +60,15 @@ for BL in "${BLACKLIST[@]}"; do
 done
 
 debug "Command: $CMD"
-debug "File: $FILE"
+debug "PWD: $(pwd)"
 
 if [[ $CMD = clean ]]; then
 
+	[[ -f "$FILE" ]] || usage "File '$FILE' doesn't exist"
+	debug "File: $FILE"
 	debug "BlackList: ${BLACKLIST[@]}"
 	#determine osa language of input file
-	OSA_LANG=$(./osagetlang.sh "$FILE")
+	OSA_LANG=$($OSA_GET_LANG "$FILE")
 	debug "OSA_LANG: $OSA_LANG"
 	#write header
 	if [[ $OSA_LANG = "JavaScript" ]]; then
