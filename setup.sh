@@ -29,8 +29,27 @@ elif [[ $1 = reset ]]; then
 			echo "- ERROR: the command '$CMD' is not installed in '$INSTALL_INTO' as symbolic link."
 		fi
 	done
+elif [[ $1 = rotate ]]; then
+	LOG_PATH=~/Library/Logs/Catsdeep/
+	LOG_NAME=osagitfilter
+	ROTATE_STAMP=$(date "+%Y-%m-%dT%H-%M-%S")
+	if [[ -d $LOG_PATH ]]; then
+		echo "Rotating log (if any) in $LOG_PATH:"
+		if [[ -f $LOG_PATH/$LOG_NAME.log ]]; then
+			echo "- renaming $LOG_NAME.log -> ${ROTATE_STAMP}_$LOG_NAME.log"
+			mv $LOG_PATH/$LOG_NAME.log $LOG_PATH/${ROTATE_STAMP}_$LOG_NAME.log
+		fi
+	else
+		echo "Creating log directory, nothing to rotate"
+		mkdir -p $LOG_PATH
+	fi
+	touch $LOG_PATH/$LOG_NAME.log
 else
-	echo "Usage: $(basename $0) (install|reset)"
+	echo "usage: $(basename $0) (install|reset|rotate)"
+	echo
+	echo "install: create symlinks in '$INSTALL_INTO'"
+	echo "  reset: remove those symlinks"
+	echo " rotate: rename any old logs to something with a timestamp"
 	echo
 	echo "Installation status:"
 	for CMD in $COMMANDS; do

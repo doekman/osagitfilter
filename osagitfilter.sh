@@ -1,11 +1,27 @@
 #!/usr/bin/env bash
 
-function usage {
-	if [[ $# > 0 ]]; then
-		printf "ERROR: %s\n\n" "$1">&2
+SCRIPT_VER=0.3
+
+function finish {
+	#SCRATCH is initialized to a temp directory only at the moment it's needed
+	if [[ $SCRATCH ]]; then
+		if [[ $DEBUG = 0 ]]; then
+			rm -Rf "$SCRATCH"
+		else
+			debug "stopped: $(date '+%Y-%m-%d %H:%M:%S') (temporary files have been left for inspection)"
+		fi
 	fi
-	echo "Usage: $SCRIPT_NAME --clean FILE [--blacklist BLACKLIST]   #translates OSA-script to text, BLACKLIST is colon-seperated">&2
-	echo "       $SCRIPT_NAME --smudge FILE   #translates text to OSA-script">&2
+}
+trap finish EXIT
+################
+
+function usage {
+	echo "-=[ $SCRIPT_NAME - v$SCRIPT_VER ]=-"
+	echo "usage: $SCRIPT_NAME --clean [--opt-out OPT_OUT] [FILE]  #translates OSA-script to text, OPT_OUT is colon-seperated">&2
+	echo "       $SCRIPT_NAME --smudge [FILE]   #translates text to OSA-script">&2
+	if [[ $# > 0 ]]; then
+		printf "\nERROR: %s\n" "$1">&2
+	fi
 	exit 1
 }
 
@@ -25,66 +41,77 @@ SCRIPT_NAME=$(basename $0 .sh)
 LOG_PATH=~/Library/Logs/Catsdeep/
 OSA_GET_LANG=osagetlang
 DEBUG=0
-CMD=
-FILE=
+NO_HEADER=0 #don't prepend osa-lang header for default scripting language (AppleScript)
 OSA_LANG=AppleScript #default language
-OLD_IFS=
-BLACKLIST_TEXT="AppleScript Debugger" #colon seperated list
+OPT_OUT_TEXT="AppleScript Debugger" #colon seperated list
 while (( $# > 0 )) ; do
   case $1 in
-	-c | --clean)  [[ $# > 1 ]] || usage "FILE argument expected after $1"; CMD=clean; FILE=$2; shift;;
-	-s | --smudge) [[ $# > 1 ]] || usage "FILE argument expected after $1"; CMD=smudge; FILE=$2; shift;;
-	-b | --blacklist) [[ $# > 1 ]] || usage "BLACKLIST argument expected after $1"; BLACKLIST_TEXT=$2; shift;;
+	-c | --clean)  CMD=clean;;
+	-s | --smudge) CMD=smudge;;
+	-o | --opt-out) [[ $# > 1 ]] || usage "OPT_OUT argument expected after $1"; OPT_OUT_TEXT=$2; shift;;
 	-d | --debug) DEBUG=1;;
 	-l | --log) DEBUG=2;;
+	-n | --no-header) NO_HEADER=1;;
 	-h | -\? | --help) usage;;
-	*) usage "Unrecognized argument '$1'";;
+	-v | --version) echo $SCRIPT_VER;exit 0;;
+	-*) usage "Unrecognized switch '$1'";;
+	*) FILE=$1;;
   esac
   shift
 done
-debug "---=[ ${SCRIPT_NAME} ]=---"
-debug "Started: $(date '+%Y-%m-%d %H:%M:%S')"
-# 
 IFS=:
-BLACKLIST=($BLACKLIST_TEXT)
+OPT_OUT=($OPT_OUT_TEXT)
 IFS=' 	
 '
 
 [[ $CMD ]] || usage "No command supplied"
 [[ -d "$LOG_PATH" ]] || mkdir -p "$LOG_PATH"
+SCRATCH=$(mktemp -d -t osagitfilter.tmp)
 
-for BL in "${BLACKLIST[@]}"; do
-	if [[ $BL = $OSA_LANG ]]; then
-		ERROR 1 "OSA-language '$BL' (file '$FILE') is blacklisted by $SCRIPT_NAME">&2
-	fi
-done
-
-debug "Command: $CMD"
-debug "PWD: $(pwd)"
+debug "---=[ $SCRIPT_NAME - v$SCRIPT_VER ]=----------------------------------------------"
+debug "started: $(date '+%Y-%m-%d %H:%M:%S')"
+debug "command: $CMD"
+debug "pwd: $(pwd)"
+debug "filename: '$FILE'"
+debug "scratch: $SCRATCH"
 
 if [[ $CMD = clean ]]; then
 
-	[[ -f "$FILE" ]] || usage "File '$FILE' doesn't exist"
-	debug "File: $FILE"
-	debug "BlackList: ${BLACKLIST[@]}"
-	#determine osa language of input file
-	OSA_LANG=$($OSA_GET_LANG "$FILE")
-	debug "OSA_LANG: $OSA_LANG"
+	#Create a temporary file from the stdin, because osadecompile expects a file, and $FILE might not exist on disk
+	CLEAN_SCPT_FILE=$SCRATCH/tmp_clean_stdin.scpt
+	cat - > $CLEAN_SCPT_FILE
+
+	#determine osa-language of input file
+	OSA_LANG=$($OSA_GET_LANG $CLEAN_SCPT_FILE)
+	debug "osa-lang: $OSA_LANG"
+	debug "opt-out: ${OPT_OUT[@]}"
+
+	#check if the osa-lang is opted out
+	for BL in "${OPT_OUT[@]}"; do
+		if [[ $BL = $OSA_LANG ]]; then
+			ERROR 1 "OSA-language '$BL' is opted out by $SCRIPT_NAME">&2
+		fi
+	done
+
 	#write header
-	if [[ $OSA_LANG = "JavaScript" ]]; then
-		comment="//"
+	if [[ $NO_HEADER = 1 && $OSA_LANG = "AppleScript" ]]; then
+		debug "--no-header specified, and osa-lang is AppleScript: writing no header"
 	else
-		comment="#"
+		if [[ $OSA_LANG = "JavaScript" ]]; then
+			comment="//"
+		else
+			comment="#"
+		fi
+		echo "$comment@osa-lang:$OSA_LANG"
 	fi
-	echo "$comment@osa-lang:$OSA_LANG"
+	
 	#decompile to text, and strip tailing whitespace (never newlines, because of $)
-	osadecompile "$FILE" | sed -E 's/[[:space:]]*$//'
+	osadecompile $CLEAN_SCPT_FILE | sed -E 's/[[:space:]]*$//'
 
 elif [[ $CMD = smudge ]]; then
 
 	#Create a temporary file, for "random access" of stdin
-	TMP_TXT_FILE=$(mktemp -t "${SCRIPT_NAME}.temp") || ERROR 1 "'mktemp' failed to create a temporary file (smudge,txt)"
-	debug "tmp txt file: $TMP_TXT_FILE"
+	SMUDGE_TXT_FILE=$SCRATCH/tmp_smudge_stdin.txt
 	#Read git's input and store it in the temp-file, except the first line when it's a meta-comment
 	FIRST_LINE_READ=
 	while IFS= read -r line; do
@@ -96,22 +123,17 @@ elif [[ $CMD = smudge ]]; then
 				continue
 			fi
 		fi
-		echo "$line" >> $TMP_TXT_FILE
+		echo "$line" >> $SMUDGE_TXT_FILE
 	done < /dev/stdin
-	debug "OSA_LANG: $OSA_LANG"
+	debug "osa-lang: $OSA_LANG"
 	#Create a temporary file, for storing output of osacompile
-	TMP_SCPT_FILE=$(mktemp -t "${SCRIPT_NAME}.temp") || (rm "$TMP_TXT_FILE"; ERROR 1 "'mktemp' failed to create a temporary file (smudge,scpt)")
-	mv "$TMP_SCPT_FILE" "$TMP_SCPT_FILE.scpt" || (rm "$TMP_TXT_FILE" "$TMP_SCPT_FILE"; ERROR 1 "failed to add 'scpt' extension to the temporary file")
-	TMP_SCPT_FILE="$TMP_SCPT_FILE.scpt"
-	debug "tmp scpt file: $TMP_SCPT_FILE"
+	SMUDGE_SCPT_FILE=$SCRATCH/tmp_smudge_stdout.scpt
 	#Perform the compilation
-	if ! osacompile -l "$OSA_LANG" -o "$TMP_SCPT_FILE" < "$TMP_TXT_FILE" ; then
-		rm "$TMP_TXT_FILE"
-		rm "$TMP_SCPT_FILE"
+	if ! osacompile -l "$OSA_LANG" -o $SMUDGE_SCPT_FILE < $SMUDGE_TXT_FILE ; then
 		ERROR 1 "osacompile failed"
 	fi
-	#Put the output on the stdout and cleanup
-	cat "$TMP_SCPT_FILE" && rm -f "$TMP_TXT_FILE" "$TMP_SCPT_FILE"
+	#Put the output on the stdout
+	cat $SMUDGE_SCPT_FILE
 
 else
 	usage "unexpected command (should not happen)"
