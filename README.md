@@ -1,7 +1,7 @@
 osagitfilter
 ============
 
-Filter to put OSA languages (AppleScript, JavaScript) into `git`. 
+Filter to put [OSA][] languages (AppleScript, JavaScript) into a `git`-repository. 
 
 Default, it prevents from accidently checkin in AppleScript files with Debugging Mode (from [AppleScript Debugger][asdbg]) switched on.
 
@@ -24,12 +24,13 @@ Configure the filter by running [git config][gitconfig] (with or without the `--
 	git config --global filter.osa.required "true"
 
 
-Put the next line in your [gitattributes][]:
+Put the line `*.scpt filter=osa` in your [gitattributes][], for example by running the following command from within your repository directory:
 
-	*.scpt filter=osa
+	echo "*.scpt filter=osa" >> .gitattributes
 
 
 
+[OSA]: https://developer.apple.com/library/content/documentation/AppleScript/Conceptual/AppleScriptX/Concepts/osa.html "Apple's Open Scripting Architecture"
 [asdbg]: http://latenightsw.com
 [so-ascr-in-git]: https://stackoverflow.com/a/14425009/56
 [asdbg-forum]: http://forum.latenightsw.com/t/cross-play-between-script-debugger-and-script-editor/834/5
@@ -40,4 +41,4 @@ Put the next line in your [gitattributes][]:
 Developer info
 --------------
 
-Because of the test files, don't put `osagitfilter` on this git repository.
+Because of the test files, don't enable `osagitfilter` for this `git`-repository.
