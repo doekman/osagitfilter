@@ -6,12 +6,12 @@ command (use one):
 
 arguments  (all optional):
   -f, --forbidden  Provide forbidden languages. '-' for empty list, defaults to 'AppleScript Debugger'
-  -n, --no-header  Don't write a OSA-lang header when it's the default language
+  -n, --no-header  Don't write a OSA-lang header for the default language (AppleScript)
   -d, --debug      Write debug info to stderr
   -l, --log        Write debug info to '/Users/doekman/Library/Logs/Catsdeep//osagitfilter.log'
   -h, -?, --help   Show this help message and exit
   -v, --version    Show program's version number and exit
-  FILE             Filename of current stream. Useful for debuggin only
+  FILE             Filename of current stream. Useful for debugging/logging only
 
 This script translates input from stdin to stdout only. The options '--forbidden' and '--no-header' 
 are only used with the '--clean' command.

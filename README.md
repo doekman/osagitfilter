@@ -1,40 +1,47 @@
 osagitfilter
 ============
 
-Filter to put [OSA][] languages (AppleScript, JavaScript) into a `git`-repository. 
-
-Default, it prevents from accidently checkin in AppleScript files with Debugging Mode (from [AppleScript Debugger][asdbg]) switched on.
+Filter to put [OSA][] languages into a `git`-repository. So you can put your `.scpt`-file (AppleScript, JavaScript) into your git-repository, and get full textual diff support.
 
 Based on [this answer by Daniel Trebbien][so-ascr-in-git] on stackoverflow and help from [guys on the Script Debugger Forum][asdbg-forum].
 
 
-
 Installation
-------------
+============
 
-Either clone [this repository](https://github.com/doekman/osagitfilter), or download the [latest release](https://github.com/doekman/osagitfilter/releases).
+Either clone [this repository](https://github.com/doekman/osagitfilter), or download the [latest release](https://github.com/doekman/osagitfilter/releases/latest).
 
 Configure the filter by running the following command:
 
 	./setup.sh configure
 
-
-Make the filter available to git by running [git config][gitconfig] (with or without the `--global` argument):
-
-	git config --global filter.osa.clean "osagitfilter --clean"
-	git config --global filter.osa.smudge "osagitfilter --smudge"
-	git config --global filter.osa.required "true"
-
-
-Put the line `*.scpt filter=osa` in your [gitattributes][] of your repository, for example by running the following command from within your repository directory:
+Put the line `*.scpt filter=osa` in your [gitattributes][] of your repository. Do this by running the command below in the root of your repository:
 
 	echo "*.scpt filter=osa" >> .gitattributes
 
-If you want to debug the script, use the following git config instead:
 
-	git config --global filter.osa.clean "osagitfilter --clean --log %f" 
-	git config --global filter.osa.smudge "osagitfilter --smudge --log %f" 
-	git config --global filter.osa.required "true"
+Extra's
+-------
+
+If you want to add your own git configuration, use the following configure command:
+
+	./setup.sh configure --no-git
+
+To reset the configuration, run this command:
+
+	./setup.sh reset
+
+If you have trouble with the script, switch on logging with:
+
+	./setup.sh configure --git-log
+
+Logging can be found in `~/Library/Logs/Catsdeep/` and can be easy inspected with `Console.app`.
+
+Some git-clients, like GitHub Desktop, can be quite chatty so log files grow quite fast. With the following command you can create a new log file, while preserving the old ones:
+
+	./setup.sh rotate
+
+Default, it prevents from accidently committing AppleScript files with Debugging Mode (from [AppleScript Debugger][asdbg]) switched on. Run `osagitfilter --help` to see more options.
 
 
 [OSA]: https://developer.apple.com/library/content/documentation/AppleScript/Conceptual/AppleScriptX/Concepts/osa.html "Apple's Open Scripting Architecture"

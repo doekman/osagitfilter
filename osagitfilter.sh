@@ -26,12 +26,12 @@ function usage {
 	echo
 	echo "arguments  (all optional):"
 	echo "  -f, --forbidden  Provide forbidden languages. '-' for empty list, defaults to 'AppleScript Debugger'"
-	echo "  -n, --no-header  Don't write a OSA-lang header when it's the default language"
+	echo "  -n, --no-header  Don't write a OSA-lang header for the default language (AppleScript)"
 	echo "  -d, --debug      Write debug info to stderr"
 	echo "  -l, --log        Write debug info to '$LOG_PATH/$SCRIPT_NAME.log'"
 	echo "  -h, -?, --help   Show this help message and exit"
 	echo "  -v, --version    Show program's version number and exit"
-	echo "  FILE             Filename of current stream. Useful for debuggin only"
+	echo "  FILE             Filename of current stream. Useful for debugging/logging only"
 	echo
 	echo "This script translates input from stdin to stdout only. The options '--forbidden' and '--no-header' "
 	echo "are only used with the '--clean' command."
