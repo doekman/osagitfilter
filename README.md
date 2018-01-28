@@ -9,25 +9,32 @@ Based on [this answer by Daniel Trebbien][so-ascr-in-git] on stackoverflow and h
 
 
 
-Configuration
--------------
+Installation
+------------
 
-Install the filter by running the following command:
+Either clone [this repository](https://github.com/doekman/osagitfilter), or download the [latest release](https://github.com/doekman/osagitfilter/releases).
 
-	./setup.sh install
+Configure the filter by running the following command:
+
+	./setup.sh configure
 
 
-Configure the filter by running [git config][gitconfig] (with or without the `--global` argument):
+Make the filter available to git by running [git config][gitconfig] (with or without the `--global` argument):
 
-	git config --global filter.osa.clean "osagitfilter --clean %f"
-	git config --global filter.osa.smudge "osagitfilter --smudge %f"
+	git config --global filter.osa.clean "osagitfilter --clean"
+	git config --global filter.osa.smudge "osagitfilter --smudge"
 	git config --global filter.osa.required "true"
 
 
-Put the line `*.scpt filter=osa` in your [gitattributes][], for example by running the following command from within your repository directory:
+Put the line `*.scpt filter=osa` in your [gitattributes][] of your repository, for example by running the following command from within your repository directory:
 
 	echo "*.scpt filter=osa" >> .gitattributes
 
+If you want to debug the script, use the following git config instead:
+
+	git config --global filter.osa.clean "osagitfilter --clean --log %f" 
+	git config --global filter.osa.smudge "osagitfilter --smudge --log %f" 
+	git config --global filter.osa.required "true"
 
 
 [OSA]: https://developer.apple.com/library/content/documentation/AppleScript/Conceptual/AppleScriptX/Concepts/osa.html "Apple's Open Scripting Architecture"
@@ -38,7 +45,3 @@ Put the line `*.scpt filter=osa` in your [gitattributes][], for example by runni
 [gitattributes]: https://git-scm.com/book/en/v2/Customizing-Git-Git-Attributes
 
 
-Developer info
---------------
-
-Because of the test files, don't enable `osagitfilter` for this `git`-repository.

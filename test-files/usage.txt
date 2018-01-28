@@ -1,3 +1,17 @@
----=[ osagitfilter - v0.4 ]=----------------------------------------------
-usage: osagitfilter --clean [--forbidden FORBIDDEN] [FILE]  #translates OSA script to text, FORBIDDEN is colon-seperated
-       osagitfilter --smudge [FILE]   #translates text to OSA script
+usage: osagitfilter command [options] [FILE]
+
+command (use one):
+  --clean          Translates OSA script to text, to be put into git
+  --smudge         Translates text stored in git to OSA script
+
+arguments  (all optional):
+  -f, --forbidden  Provide forbidden languages. '-' for empty list, defaults to 'AppleScript Debugger'
+  -n, --no-header  Don't write a OSA-lang header when it's the default language
+  -d, --debug      Write debug info to stderr
+  -l, --log        Write debug info to '/Users/doekman/Library/Logs/Catsdeep//osagitfilter.log'
+  -h, -?, --help   Show this help message and exit
+  -v, --version    Show program's version number and exit
+  FILE             Filename of current stream. Useful for debuggin only
+
+This script translates input from stdin to stdout only. The options '--forbidden' and '--no-header' 
+are only used with the '--clean' command.

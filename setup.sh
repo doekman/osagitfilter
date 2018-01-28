@@ -4,7 +4,7 @@ BASE_DIR=$(pwd)
 INSTALL_INTO=/usr/local/bin
 COMMANDS='osagetlang osagitfilter'
 
-if [[ $1 = install ]]; then
+if [[ $1 = configure ]]; then
 	echo "Trying to install the osagitfilter-commands"
 	for CMD in $COMMANDS; do
 		if [[ -f $INSTALL_INTO/$CMD ]]; then

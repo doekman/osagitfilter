@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-SCRIPT_VER=0.4
+SCRIPT_VER=0.5
 
 function finish {
 	#SCRATCH is initialized to a temp directory only at the moment it's needed
@@ -18,9 +18,23 @@ trap finish EXIT
 ################
 
 function usage {
-	echo "---=[ $SCRIPT_NAME - v$SCRIPT_VER ]=----------------------------------------------"
-	echo "usage: $SCRIPT_NAME --clean [--forbidden FORBIDDEN] [FILE]  #translates OSA script to text, FORBIDDEN is colon-seperated"
-	echo "       $SCRIPT_NAME --smudge [FILE]   #translates text to OSA script"
+	echo "usage: $SCRIPT_NAME command [options] [FILE]"
+	echo
+	echo "command (use one):"
+	echo "  --clean          Translates OSA script to text, to be put into git"
+	echo "  --smudge         Translates text stored in git to OSA script"
+	echo
+	echo "arguments  (all optional):"
+	echo "  -f, --forbidden  Provide forbidden languages. '-' for empty list, defaults to 'AppleScript Debugger'"
+	echo "  -n, --no-header  Don't write a OSA-lang header when it's the default language"
+	echo "  -d, --debug      Write debug info to stderr"
+	echo "  -l, --log        Write debug info to '$LOG_PATH/$SCRIPT_NAME.log'"
+	echo "  -h, -?, --help   Show this help message and exit"
+	echo "  -v, --version    Show program's version number and exit"
+	echo "  FILE             Filename of current stream. Useful for debuggin only"
+	echo
+	echo "This script translates input from stdin to stdout only. The options '--forbidden' and '--no-header' "
+	echo "are only used with the '--clean' command."
 	if [[ $# > 0 ]]; then
 		ERROR 1 "$@"
 	fi
@@ -58,7 +72,7 @@ while (( $# > 0 )) ; do
 	-d | --debug) DEBUG=1;;
 	-l | --log) DEBUG=2;;
 	-h | -\? | --help) usage;;
-	-v | --version) echo $SCRIPT_VER;exit 0;;
+	-v | --version) echo "$SCRIPT_NAME v$SCRIPT_VER";exit 0;;
 	-*) usage "Unrecognized switch '$1'";;
 	*) FILE=$1;;
   esac
