@@ -1,6 +1,22 @@
 #!/usr/bin/env bash
 
+# Unofficial Bash Strict Mode <http://redsymbol.net/articles/unofficial-bash-strict-mode/>
+set -euo pipefail
+IFS=$'\n\t'
+
 SCRIPT_VER=0.5
+SCRIPT_NAME=$(basename $0 .sh)
+CALLED_WITH="$0 $@"
+LOG_PATH=~/Library/Logs/Catsdeep/
+OSA_GET_LANG_CMD=osagetlang
+DEFAULT_OSA_LANG=AppleScript
+OSA_LANG=$DEFAULT_OSA_LANG
+FORBIDDEN_TEXT="AppleScript Debugger" #colon seperated list
+FORBIDDEN=()
+DEBUG=0
+WRITE_HEADER=1
+FILE=
+SCRATCH=
 
 function finish {
 	#SCRATCH is initialized to a temp directory only at the moment it's needed
@@ -25,7 +41,7 @@ function usage {
 	echo "  smudge           Translates text stored in git to OSA script"
 	echo
 	echo "arguments  (all optional):"
-	echo "  -f, --forbidden  Provide forbidden languages. '-' for empty list, defaults to 'AppleScript Debugger'"
+	echo "  -f, --forbidden  Provide (colon-seperated) forbidden languages. '-' for empty list, defaults to 'AppleScript Debugger'"
 	echo "  -n, --no-header  Don't write a OSA-lang header for the default language (AppleScript)"
 	echo "  -d, --debug      Write debug info to stderr"
 	echo "  -l, --log        Write debug info to '$LOG_PATH/$SCRIPT_NAME.log'"
@@ -54,15 +70,6 @@ function ERROR {
 	exit $ERR_NR
 }
 
-SCRIPT_NAME=$(basename $0 .sh)
-CALLED_WITH="$0 $@"
-LOG_PATH=~/Library/Logs/Catsdeep/
-OSA_GET_LANG_CMD=osagetlang
-DEBUG=0
-DEFAULT_OSA_LANG=AppleScript
-OSA_LANG=$DEFAULT_OSA_LANG
-FORBIDDEN_TEXT="AppleScript Debugger" #colon seperated list
-WRITE_HEADER=1
 if [[ $# > 0 ]]; then
 	case $1 in
 		clean | smudge) CMD=$1;;
@@ -92,7 +99,7 @@ if [[ $FORBIDDEN_TEXT = "-" ]]; then
 else
 	FORBIDDEN=($FORBIDDEN_TEXT)
 fi
-IFS=$' \n\t'
+IFS=$'\n\t'
 
 [[ $CMD ]] || usage "No command supplied"
 [[ -d "$LOG_PATH" ]] || mkdir -p "$LOG_PATH"
@@ -117,10 +124,10 @@ if [[ $CMD = clean ]]; then
 	#determine osa-language of input file
 	OSA_LANG=$($OSA_GET_LANG_CMD $CLEAN_SCPT_FILE)
 	debug "OSA lang: $OSA_LANG"
-	debug "forbidden langs: ${FORBIDDEN[@]}"
+	debug "forbidden langs: ${FORBIDDEN[@]:-}"
 
 	#check if the osa-lang is forbidden
-	for BL in "${FORBIDDEN[@]}"; do
+	for BL in "${FORBIDDEN[@]:-}"; do
 		if [[ $BL = $OSA_LANG ]]; then
 			ERROR 1 "OSA language '$BL' is forbidden by $SCRIPT_NAME"
 		fi

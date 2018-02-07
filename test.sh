@@ -92,7 +92,8 @@ function clean_up {
 	if (( TESTS_NOK == 0 )); then
 		rm -Rf $TEST_DIR
 	else
-		echo "CLEANUP YOURSELF: rm -Rf $TEST_DIR"
+		echo -n "$TEST_DIR" | pbcopy
+		echo "CLEANUP YOURSELF: rm -Rf $TEST_DIR # (test dir copied on to clipboard)"
 	fi
 }
 
