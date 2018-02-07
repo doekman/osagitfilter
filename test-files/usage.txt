@@ -1,8 +1,8 @@
 usage: osagitfilter command [options] [FILE]
 
 command (use one):
-  --clean          Translates OSA script to text, to be put into git
-  --smudge         Translates text stored in git to OSA script
+  clean            Translates OSA script to text, to be put into git
+  smudge           Translates text stored in git to OSA script
 
 arguments  (all optional):
   -f, --forbidden  Provide forbidden languages. '-' for empty list, defaults to 'AppleScript Debugger'
@@ -14,4 +14,4 @@ arguments  (all optional):
   FILE             Filename of current stream. Useful for debugging/logging only
 
 This script translates input from stdin to stdout only. The options '--forbidden' and '--no-header' 
-are only used with the '--clean' command.
+are only used with the 'clean' command.

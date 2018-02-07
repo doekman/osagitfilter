@@ -21,8 +21,8 @@ function usage {
 	echo "usage: $SCRIPT_NAME command [options] [FILE]"
 	echo
 	echo "command (use one):"
-	echo "  --clean          Translates OSA script to text, to be put into git"
-	echo "  --smudge         Translates text stored in git to OSA script"
+	echo "  clean            Translates OSA script to text, to be put into git"
+	echo "  smudge           Translates text stored in git to OSA script"
 	echo
 	echo "arguments  (all optional):"
 	echo "  -f, --forbidden  Provide forbidden languages. '-' for empty list, defaults to 'AppleScript Debugger'"
@@ -34,7 +34,7 @@ function usage {
 	echo "  FILE             Filename of current stream. Useful for debugging/logging only"
 	echo
 	echo "This script translates input from stdin to stdout only. The options '--forbidden' and '--no-header' "
-	echo "are only used with the '--clean' command."
+	echo "are only used with the 'clean' command."
 	if [[ $# > 0 ]]; then
 		ERROR 1 "$@"
 	fi
@@ -63,10 +63,18 @@ DEFAULT_OSA_LANG=AppleScript
 OSA_LANG=$DEFAULT_OSA_LANG
 FORBIDDEN_TEXT="AppleScript Debugger" #colon seperated list
 WRITE_HEADER=1
+if [[ $# > 0 ]]; then
+	case $1 in
+		clean | smudge) CMD=$1;;
+		-h | -\? | --help) usage;;
+		*) usage "unknown command '$1'";;
+	esac
+	shift
+else
+	usage "missing command"
+fi
 while (( $# > 0 )) ; do
   case $1 in
-	-c | --clean)  CMD=clean;;
-	-s | --smudge) CMD=smudge;;
 	-f | --forbidden) [[ $# > 1 ]] || usage "FORBIDDEN argument expected after $1"; FORBIDDEN_TEXT=$2; shift;;
 	-n | --no-header) WRITE_HEADER=0;;
 	-d | --debug) DEBUG=1;;

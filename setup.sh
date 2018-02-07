@@ -23,13 +23,13 @@ if [[ $1 = configure ]]; then
 			echo "Skipping git config"
 		elif [[ $2 == "--git-log" ]]; then
 			echo "Configuring git with logging options switched on"
-			git config --global filter.osa.clean "osagitfilter --clean --log %f" 
-			git config --global filter.osa.smudge "osagitfilter --smudge --log %f" 
+			git config --global filter.osa.clean "osagitfilter clean --log %f" 
+			git config --global filter.osa.smudge "osagitfilter smudge --log %f" 
 			git config --global filter.osa.required "true"
 		else
 			echo "Configuring git"
-			git config --global filter.osa.clean "osagitfilter --clean"
-			git config --global filter.osa.smudge "osagitfilter --smudge"
+			git config --global filter.osa.clean "osagitfilter clean"
+			git config --global filter.osa.smudge "osagitfilter smudge"
 			git config --global filter.osa.required "true"
 		fi
 	else

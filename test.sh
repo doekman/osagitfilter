@@ -45,7 +45,11 @@ function filter_test {
 	#input arguments
 	#local CMD="$1" #Hmm, command substitution...
 	local INPUT_FILE="$TEST_FILES_DIR/$2"
-	local EXPECTED_FILE="$TEST_FILES_DIR/$3"
+	if [[ $3 = "-" ]]; then
+		local EXPECTED_FILE=""
+	else
+		local EXPECTED_FILE="$TEST_FILES_DIR/$3"
+	fi
 	local EXPECTED_EXIT_CODE="$4"
 	local TEST_DESCRIPTION="$5"
 	#
@@ -66,17 +70,19 @@ function filter_test {
 		return
 	fi
 	if (( $EXIT_CODE == 0 )); then
-		echo "---===[ diff $EXPECTED_FILE $ACTUAL_FILE ]=========---------" >> $TEST_LOG
-		diff $EXPECTED_FILE $ACTUAL_FILE >> $TEST_LOG 2>&1
-		EXIT_CODE=$?
-		echo "-=> EXIT_CODE:$EXIT_CODE" >> $TEST_LOG
-		if (( $EXIT_CODE != 0 )); then
-			((TESTS_NOK+=1))
-			echo "# diff failed, see $TEST_NR.stderr.log"
-			if [[ $EXPECTED_EXT != scpt ]]; then #non-binary file
-				echo "- COMPARE: opendiff $EXPECTED_FILE $ACTUAL_FILE"
+		if [[ $EXPECTED_FILE ]]; then
+			echo "---===[ diff $EXPECTED_FILE $ACTUAL_FILE ]=========---------" >> $TEST_LOG
+			diff $EXPECTED_FILE $ACTUAL_FILE >> $TEST_LOG 2>&1
+			EXIT_CODE=$?
+			echo "-=> EXIT_CODE:$EXIT_CODE" >> $TEST_LOG
+			if (( $EXIT_CODE != 0 )); then
+				((TESTS_NOK+=1))
+				echo "# diff failed, see $TEST_NR.stderr.log"
+				if [[ $EXPECTED_EXT != scpt ]]; then #non-binary file
+					echo "- COMPARE: opendiff $EXPECTED_FILE $ACTUAL_FILE"
+				fi
+				return
 			fi
-			return
 		fi
 	fi
 	((TESTS_OK+=1))
@@ -143,15 +149,15 @@ if (( TESTS_NOK != 0 )); then
 else
 
 	#--| (Wrong) argument tests
-	filter_test "osagitfilter"     "as.scpt"               "usage.txt"             1 "No arguments"
-	filter_test "osagitfilter -h"  "as.scpt"               "usage.txt"             0 "Show usage screen (--help)" #this test-case will haunt me with every new version
+	filter_test "osagitfilter"     "as.scpt"               "-"             1 "No arguments"
+	filter_test "osagitfilter -h"  "as.scpt"               "-"             0 "Show usage screen (--help)"
 
-	CMD_CLEAN="osagitfilter --clean --log"
-	CMD_CLEAN_NO="osagitfilter --clean --no-header --log"
-	CMD_CLEAN_ALL="osagitfilter --clean --forbidden - --log"
-	CMD_CLEAN_APPLE="osagitfilter --clean --forbidden 'JavaScript:AppleScript Debugger' --log"
-	CMD_SMUDGE="osagitfilter --smudge --log"
-	CMD_BOTH="osagitfilter --clean --log | osagitfilter --smudge --log"
+	CMD_CLEAN="osagitfilter clean --log"
+	CMD_CLEAN_NO="osagitfilter clean --no-header --log"
+	CMD_CLEAN_ALL="osagitfilter clean --forbidden - --log"
+	CMD_CLEAN_APPLE="osagitfilter clean --forbidden 'JavaScript:AppleScript Debugger' --log"
+	CMD_SMUDGE="osagitfilter smudge --log"
+	CMD_BOTH="osagitfilter clean --log | osagitfilter smudge --log"
 
 	#--| Plain AppleScript tests
 	filter_test "$CMD_CLEAN"       "as.scpt"               "as-hdr.applescript"    0 "Clean AppleScript"
