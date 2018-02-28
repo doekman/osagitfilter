@@ -7,13 +7,13 @@ Filter to put [OSA][] languages into a `git`-repository. So you can put your `.s
 Installation
 ------------
 
-Either clone [this repository](https://github.com/doekman/osagitfilter), or download the [latest release](https://github.com/doekman/osagitfilter/releases/latest).
+Either clone [this repository](https://github.com/doekman/osagitfilter), or download the [latest release](https://github.com/doekman/osagitfilter/releases/latest) and unzip it to a folder where you want to install it.
 
 Configure the filter by running the following command:
 
 	./setup.sh configure
 
-Put the line `*.scpt filter=osa` in your [gitattributes][] of your repository. Do this by running the command below in the root of your repository:
+For every reporistory you want to use it, put the line `*.scpt filter=osa` in the [gitattributes][] of your repository. Do this by running the command below in the root of your repository:
 
 	echo "*.scpt filter=osa" >> .gitattributes
 
@@ -33,7 +33,7 @@ If you have trouble with the script, switch on logging with:
 
 	./setup.sh configure --git-log
 
-Logging can be found in `~/Library/Logs/Catsdeep/` and can be easy inspected with `Console.app`.
+Logging can be found in `~/Library/Logs/Catsdeep/osagitfilter.log` and can be easy inspected with `Console.app`.
 
 Some git-clients, like GitHub Desktop, can be quite chatty so log files grow quite fast. With the following command you can create a new log file, while preserving the old ones:
 
