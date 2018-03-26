@@ -33,6 +33,13 @@ function finish {
 trap finish EXIT
 ################
 
+function on_error {
+	printf "error: $(date '+%Y-%m-%d %H:%M:%S')\n?: $?\n-: $-\n_: $_\n" >> $LOG_PATH/$SCRIPT_NAME.log
+}
+
+trap on_error ERR
+################
+
 function usage {
 	echo "usage: $SCRIPT_NAME command [options] [FILE]"
 	echo
