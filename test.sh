@@ -167,6 +167,8 @@ else
 	filter_test "$CMD_SMUDGE"      "as-hdr.applescript"    "as.scpt"               0 "Smudge AppleScript"
 	filter_test "$CMD_SMUDGE"      "as.applescript"        "as.scpt"               0 "Smudge AppleScript (without header)"
 	filter_test "$CMD_BOTH"        "as.scpt"               "as.scpt"               0 "Pass through AppleScript"
+	#Known issue
+	#filter_test "$CMD_BOTH"        "as2.scpt"              "as2.scpt"              0 "Pass through AppleScript; file not ending with empty line"
 
 	#--| ScriptDebugger tests
 	filter_test "$CMD_CLEAN"       "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Default Deny: forbidden Debugging Mode switched on"
