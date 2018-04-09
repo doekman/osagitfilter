@@ -4,7 +4,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-SCRIPT_VER=0.6
+SCRIPT_VER=0.6.2
 SCRIPT_NAME=$(basename $0 .sh)
 CALLED_WITH="$0 $@"
 LOG_PATH=~/Library/Logs/Catsdeep/
@@ -31,13 +31,6 @@ function finish {
 	fi
 }
 trap finish EXIT
-################
-
-function on_error {
-	printf "error: $(date '+%Y-%m-%d %H:%M:%S')\n?: $?\n-: $-\n_: $_\n" >> $LOG_PATH/$SCRIPT_NAME.log
-}
-
-trap on_error ERR
 ################
 
 function usage {
@@ -152,9 +145,9 @@ if [[ $CMD = clean ]]; then
 		echo "$comment@osa-lang:$OSA_LANG"
 	fi
 	
-	#decompile to text, and strip tailing whitespace (never newlines, because of $) and finally remove last line
-	debug "Starting osadecompile, strip trailing whitespace and remove last line (which is added by osacompile)"
-	osadecompile $CLEAN_SCPT_FILE | sed -E 's/[[:space:]]*$//' | sed -e '$ d'
+	#decompile to text, and strip tailing whitespace (never newlines, because of $) and finally remove last line if it's empty
+	debug "Starting osadecompile, strip trailing whitespace and remove last line if it's empty (which is added by osacompile)"
+	osadecompile $CLEAN_SCPT_FILE | sed -E 's/[[:space:]]*$//' | sed '${/^$/d;}'
 
 elif [[ $CMD = smudge ]]; then
 
@@ -179,9 +172,7 @@ elif [[ $CMD = smudge ]]; then
 	SMUDGE_SCPT_FILE=$SCRATCH/tmp_smudge_stdout.scpt
 	#Perform the compilation
 	debug "Starting osacompilation"
-	if ! osacompile -l "$OSA_LANG" -o $SMUDGE_SCPT_FILE < $SMUDGE_TXT_FILE ; then
-		ERROR 1 "osacompile failed"
-	fi
+	cat $SMUDGE_TXT_FILE | osacompile -l "$OSA_LANG" -o $SMUDGE_SCPT_FILE
 	#Put the output on the stdout
 	cat $SMUDGE_SCPT_FILE
 
