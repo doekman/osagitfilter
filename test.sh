@@ -16,6 +16,10 @@ function lang_test {
 	local TEST_LOG=$TEST_DIR/$TEST_NR.stderr.log
 
 	echo "|≣≡=- $(printf '%2s' $TEST_NR), running lang-test: $TEST_DESCRIPTION"
+	if (( LIST_ONLY == 1 )); then
+		((TESTS_SKIPPED+=1))
+		return
+	fi
 	echo "---===[ $CMD ]=========---------" > $TEST_LOG
 	RESULT=$(bash -c "$CMD" 2>>$TEST_LOG)
 	EXIT_CODE=$?
@@ -60,6 +64,10 @@ function filter_test {
 	local TEST_CMD="cat $INPUT_FILE | $CMD > $ACTUAL_FILE"
 	#
 	echo "|≣≡=- $(printf '%2s' $TEST_NR), running filter-test: $TEST_DESCRIPTION"
+	if (( LIST_ONLY == 1 )); then
+		((TESTS_SKIPPED+=1))
+		return
+	fi
 	echo "---===[ cat $INPUT_FILE | $1 > $ACTUAL_FILE }=========---------" > $TEST_LOG
 	bash -c "cat $INPUT_FILE | $1 > $ACTUAL_FILE 2>> $TEST_LOG"
 	EXIT_CODE=$?
@@ -109,6 +117,9 @@ fi
 ((TESTS_OK=0))
 ((TESTS_NOK=0))
 ((TESTS_SKIPPED=0))
+#Other
+((RUN_TEST=0))
+((LIST_ONLY=0))
 #
 ((TEST_ERROR=0))
 TEST_DIR="$(mktemp -d -t osagitfilter.test.tmp)"
@@ -127,11 +138,11 @@ if [[ $1 =~ -?[0-9]+ ]]; then
 	else
 		((RUN_TEST=${1}))
 	fi
-else
-	((RUN_TEST=0))
+elif [[ $1 == "-l" || $1 == "--list" ]]; then
+	((LIST_ONLY=1))
 fi
 
-echo "Starting tests... (to run one test: '$(basename $0) TEST_NR'; use -1 to force failure on lang-tests, -2 for filter-tests)"
+echo "Starting tests... (to run one test: '$(basename $0) TEST_NR'; to show all tests: '$(basename $0) -l' or '$(basename $0) --list'; use -1 to force failure on lang-tests, -2 for filter-tests)"
 echo
 
 #--| Determine OSA language tests
@@ -171,6 +182,10 @@ else
 	filter_test "$CMD_SMUDGE"      "as.applescript"        "as.scpt"               0 "Smudge AppleScript (without header)"
 	filter_test "$CMD_BOTH"        "as.scpt"               "as.scpt"               0 "Pass through AppleScript"
 	filter_test "$CMD_BOTH"        "as2.scpt"              "as2.scpt"              0 "Pass through AppleScript; file not ending with empty line"
+
+	#--| Non-AppleScript files test
+	#issue 2: doesn't work yet
+	filter_test "$CMD_CLEAN"       "no-as.scpt"            "no-as.scpt"            0 "Clean AppleScript: Non-AppleScript file"
 
 	#--| ScriptDebugger tests
 	filter_test "$CMD_CLEAN"       "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Default Deny: forbidden Debugging Mode switched on"
