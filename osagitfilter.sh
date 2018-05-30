@@ -4,7 +4,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-SCRIPT_VER=0.6.2
+SCRIPT_VER=0.6.2dev
 SCRIPT_NAME=$(basename $0 .sh)
 CALLED_WITH="$0 $@"
 LOG_PATH=~/Library/Logs/Catsdeep/
@@ -23,9 +23,9 @@ function finish {
 	if [[ $SCRATCH ]]; then
 		if [[ $DEBUG = 0 ]]; then
 			rm -Rf "$SCRATCH"
-		else
+		else #leave the temporary files when in debug or logging mode
 			debug "stopped: $(date '+%Y-%m-%d %H:%M:%S') (temporary files have been left for inspection)"
-			#make log operation "atomic"
+			#make the log operation "atomic"
 			cat $SCRATCH/tmp.log >> $LOG_PATH/$SCRIPT_NAME.log
 		fi
 	fi
@@ -34,6 +34,8 @@ trap finish EXIT
 ################
 
 function usage {
+	show_version
+	echo
 	echo "usage: $SCRIPT_NAME command [options] [FILE]"
 	echo
 	echo "command (use one):"
@@ -57,6 +59,10 @@ function usage {
 	exit 0
 }
 
+function show_version {
+	echo "$SCRIPT_NAME v$SCRIPT_VER"
+}
+
 function debug {
 	[[ $DEBUG = 1 ]] && >&2 printf "DEBUG: %s\n" "$@"
 	[[ $DEBUG = 2 ]] && printf "%s\n" "$@">>$SCRATCH/tmp.log
@@ -74,6 +80,7 @@ if [[ $# > 0 ]]; then
 	case $1 in
 		clean | smudge) CMD=$1;;
 		-h | -\? | --help) usage;;
+		-v | --version) show_version;exit 0;;
 		*) usage "unknown command '$1'";;
 	esac
 	shift
@@ -87,7 +94,7 @@ while (( $# > 0 )) ; do
 	-d | --debug) DEBUG=1;;
 	-l | --log) DEBUG=2;;
 	-h | -\? | --help) usage;;
-	-v | --version) echo "$SCRIPT_NAME v$SCRIPT_VER";exit 0;;
+	-v | --version) show_version;exit 0;;
 	-*) usage "Unrecognized switch '$1'";;
 	*) FILE=$1;;
   esac
@@ -105,7 +112,7 @@ IFS=$'\n\t'
 [[ -d "$LOG_PATH" ]] || mkdir -p "$LOG_PATH"
 SCRATCH=$(mktemp -d -t osagitfilter.tmp)
 
-debug "---=[ $SCRIPT_NAME - v$SCRIPT_VER ]=----------------------------------------------"
+debug "---=[ $(show_version) ]=----------------------------------------------"
 debug "started: $(date '+%Y-%m-%d %H:%M:%S')"
 debug "sw_vers: $(sw_vers | tr -d '\t' | tr '\n' ';')"
 debug "call: $CALLED_WITH"
