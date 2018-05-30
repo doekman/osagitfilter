@@ -147,7 +147,7 @@ if [[ $CMD = clean ]]; then
 	
 	#decompile to text, and strip tailing whitespace (never newlines, because of $) and finally remove last line if it's empty
 	debug "Starting osadecompile, strip trailing whitespace and remove last line if it's empty (which is added by osacompile)"
-	osadecompile $CLEAN_SCPT_FILE | sed -E 's/[[:space:]]*$//' | sed '${/^$/d;}'
+	osadecompile $CLEAN_SCPT_FILE | sed -E 's/[[:space:]]*$//' | perl -pe 'chomp if eof'
 
 elif [[ $CMD = smudge ]]; then
 
@@ -167,6 +167,10 @@ elif [[ $CMD = smudge ]]; then
 		fi
 		echo "$line" >> $SMUDGE_TXT_FILE
 	done < /dev/stdin
+	#when there are characters between last newline and EOF, print these too (basically $line is not a real line in this case)
+	if [[ -n "$line" ]]; then
+		printf "$line" >> $SMUDGE_TXT_FILE
+	fi
 	debug "osa-lang: $OSA_LANG"
 	#Create a temporary file, for storing output of osacompile
 	SMUDGE_SCPT_FILE=$SCRATCH/tmp_smudge_stdout.scpt

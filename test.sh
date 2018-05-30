@@ -119,11 +119,13 @@ if [[ $1 =~ -?[0-9]+ ]]; then
 	if (( $1 == -1 )); then
 		((TEST_ERROR=1))
 		((RUN_TEST=0))
-	elif (( $1 <= -2 )); then
+	elif (( $1 == -2 )); then
 		((TEST_ERROR=2))
 		((RUN_TEST=0))
+	elif (( $1 < 0 )); then
+		((RUN_TEST=${1:1}))
 	else
-		((RUN_TEST=$1))
+		((RUN_TEST=${1}))
 	fi
 else
 	((RUN_TEST=0))
@@ -168,8 +170,7 @@ else
 	filter_test "$CMD_SMUDGE"      "as-hdr.applescript"    "as.scpt"               0 "Smudge AppleScript"
 	filter_test "$CMD_SMUDGE"      "as.applescript"        "as.scpt"               0 "Smudge AppleScript (without header)"
 	filter_test "$CMD_BOTH"        "as.scpt"               "as.scpt"               0 "Pass through AppleScript"
-	#Known issue
-	#filter_test "$CMD_BOTH"        "as2.scpt"              "as2.scpt"              0 "Pass through AppleScript; file not ending with empty line"
+	filter_test "$CMD_BOTH"        "as2.scpt"              "as2.scpt"              0 "Pass through AppleScript; file not ending with empty line"
 
 	#--| ScriptDebugger tests
 	filter_test "$CMD_CLEAN"       "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Default Deny: forbidden Debugging Mode switched on"
