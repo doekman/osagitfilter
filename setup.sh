@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
 
-BASE_DIR=$(pwd)
+function abspath {
+    if [[ -d "$1" ]]; then
+        pushd "$1" >/dev/null
+        pwd
+        popd >/dev/null
+    elif [[ -e $1 ]]; then
+        pushd "$(dirname "$1")" >/dev/null
+        echo "$(pwd)/$(basename "$1")"
+        popd >/dev/null
+    else
+        echo "$1" does not exist! >&2
+        return 127
+    fi
+}
+
+BASE_DIR=$(abspath $(basename $0))
 INSTALL_INTO=/usr/local/bin
 COMMANDS='osagetlang osagitfilter'
 LOG_PATH=~/Library/Logs/Catsdeep/
