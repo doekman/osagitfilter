@@ -15,7 +15,8 @@ function abspath {
     fi
 }
 
-BASE_DIR=$(abspath $(basename $0))
+SCRIPT_NAME=$(basename $0)
+BASE_DIR=$(dirname $(abspath $0))
 INSTALL_INTO=/usr/local/bin
 COMMANDS='osagetlang osagitfilter'
 LOG_PATH=~/Library/Logs/Catsdeep/
@@ -83,7 +84,7 @@ elif [[ $1 = rotate ]]; then
 	fi
 	touch $LOG_PATH/$LOG_NAME.log
 else
-	echo "usage: $(basename $0) (configure|reset|rotate) [options]"
+	echo "usage: ${SCRIPT_NAME} (configure|reset|rotate) [options]"
 	echo
 	echo "configure: create symlinks in '$INSTALL_INTO' and add git config ('--no-git' to skip git config, or '--git-log' for logging)"
 	echo "    reset: remove those symlinks"
@@ -97,4 +98,6 @@ else
 			echo "- '$CMD' is currently NOT installed"
 		fi
 	done
+  echo
+  echo "Script location: ${BASE_DIR}"
 fi
