@@ -143,6 +143,7 @@ elif [[ $1 == "-l" || $1 == "--list" ]]; then
 fi
 
 echo "Starting tests... (to run one test: '$(basename $0) TEST_NR'; to show all tests: '$(basename $0) -l' or '$(basename $0) --list'; use -1 to force failure on lang-tests, -2 for filter-tests)"
+echo "started: $(date '+%Y-%m-%d %H:%M:%S')"
 echo
 
 #--| Determine OSA language tests

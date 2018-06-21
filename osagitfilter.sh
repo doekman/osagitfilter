@@ -13,7 +13,7 @@ DEFAULT_OSA_LANG=AppleScript
 OSA_LANG=$DEFAULT_OSA_LANG
 FORBIDDEN_TEXT="AppleScript Debugger" #colon seperated list
 FORBIDDEN=()
-DEBUG=0
+DO_LOG=0
 WRITE_HEADER=1
 FILE=
 SCRATCH=
@@ -21,10 +21,10 @@ SCRATCH=
 function finish {
 	#SCRATCH is initialized to a temp directory only at the moment it's needed
 	if [[ $SCRATCH ]]; then
-		if [[ $DEBUG = 0 ]]; then
+		if [[ $DO_LOG = 0 ]]; then
 			rm -Rf "$SCRATCH"
 		else #leave the temporary files when in debug or logging mode
-			debug "stopped: $(date '+%Y-%m-%d %H:%M:%S') (temporary files have been left for inspection)"
+			log_line "stopped: $(date '+%Y-%m-%d %H:%M:%S') (temporary files have been left for inspection)"
 			#make the log operation "atomic"
 			cat $SCRATCH/tmp.log >> $LOG_PATH/$SCRIPT_NAME.log
 		fi
@@ -45,11 +45,10 @@ function usage {
 	echo "arguments  (all optional):"
 	echo "  -f, --forbidden  Provide (colon-seperated) forbidden languages. '-' for empty list, defaults to 'AppleScript Debugger'"
 	echo "  -n, --no-header  Don't write a OSA-lang header for the default language (AppleScript)"
-	echo "  -d, --debug      Write debug info to stderr"
 	echo "  -l, --log        Write debug info to '$LOG_PATH/$SCRIPT_NAME.log'"
 	echo "  -h, -?, --help   Show this help message and exit"
 	echo "  -v, --version    Show program's version number and exit"
-	echo "  FILE             Filename of current stream. Useful for debugging/logging only"
+	echo "  FILE             Filename of current stream; not actually used but comes in handy when debugging"
 	echo
 	echo "This script translates input from stdin to stdout only. The options '--forbidden' and '--no-header' "
 	echo "are only used with the 'clean' command."
@@ -63,10 +62,8 @@ function show_version {
 	echo "$SCRIPT_NAME v$SCRIPT_VER"
 }
 
-function debug {
-	if [[ $DEBUG = 1 ]]; then 
-    >&2 printf "DEBUG: %s\n" "$@"
-  elif [[ $DEBUG = 2 ]]; then
+function log_line {
+  if [[ $DO_LOG = 1 ]]; then
     printf "%s\n" "$@">>$SCRATCH/tmp.log
   fi
 }
@@ -75,7 +72,7 @@ function ERROR {
 	ERR_NR=$1
 	shift
 	>&2 echo "ERROR: $@"
-	debug "ERROR($ERR_NR): $@"
+	log_line "ERROR($ERR_NR): $@"
 	exit $ERR_NR
 }
 
@@ -94,8 +91,7 @@ while (( $# > 0 )) ; do
   case $1 in
 	-f | --forbidden) [[ $# > 1 ]] || usage "FORBIDDEN argument expected after $1"; FORBIDDEN_TEXT=$2; shift;;
 	-n | --no-header) WRITE_HEADER=0;;
-	-d | --debug) DEBUG=1;;
-	-l | --log) DEBUG=2;;
+	-l | --log) DO_LOG=1;;
 	-h | -\? | --help) usage;;
 	-v | --version) show_version;exit 0;;
 	-*) usage "Unrecognized switch '$1'";;
@@ -115,15 +111,15 @@ IFS=$'\n\t'
 [[ -d "$LOG_PATH" ]] || mkdir -p "$LOG_PATH"
 SCRATCH=$(mktemp -d -t osagitfilter.tmp)
 
-debug "---=[ $(show_version) ]=----------------------------------------------"
-debug "started: $(date '+%Y-%m-%d %H:%M:%S')"
-debug "sw_vers: $(sw_vers | tr -d '\t' | tr '\n' ';')"
-debug "call: $CALLED_WITH"
-debug "caller: $(ps -o args= $PPID)" #see: https://stackoverflow.com/a/26985984/56
-debug "scratch: $SCRATCH"
-debug "pwd: $(pwd)"
-debug "command: $CMD"
-debug "filename: '$FILE'"
+log_line "---=[ $(show_version) ]=----------------------------------------------"
+log_line "started: $(date '+%Y-%m-%d %H:%M:%S')"
+log_line "sw_vers: $(sw_vers | tr -d '\t' | tr '\n' ';')"
+log_line "call: $CALLED_WITH"
+log_line "caller: $(ps -o args= $PPID)" #see: https://stackoverflow.com/a/26985984/56
+log_line "scratch: $SCRATCH"
+log_line "pwd: $(pwd)"
+log_line "command: $CMD"
+log_line "filename: '$FILE'"
 
 if [[ $CMD = clean ]]; then
 
@@ -133,8 +129,8 @@ if [[ $CMD = clean ]]; then
 
 	#determine osa-language of input file
 	OSA_LANG=$($OSA_GET_LANG_CMD $CLEAN_SCPT_FILE)
-	debug "OSA lang: $OSA_LANG"
-	debug "forbidden langs: ${FORBIDDEN[@]:-}"
+	log_line "OSA lang: $OSA_LANG"
+	log_line "forbidden langs: ${FORBIDDEN[@]:-}"
 
 	#check if the osa-lang is forbidden
 	for BL in "${FORBIDDEN[@]:-}"; do
@@ -145,7 +141,7 @@ if [[ $CMD = clean ]]; then
 
 	#write header
 	if [[ $WRITE_HEADER = 0 && "$OSA_LANG" = "$DEFAULT_OSA_LANG" ]]; then
-		debug "default OSA language is AppleScript: writing no header because of --no-header"
+		log_line "default OSA language is AppleScript: writing no header because of --no-header"
 	else
 		if [[ $OSA_LANG = "JavaScript" ]]; then
 			comment="//"
@@ -156,7 +152,7 @@ if [[ $CMD = clean ]]; then
 	fi
 	
 	#decompile to text, and strip tailing whitespace (never newlines, because of $) and finally remove last line if it's empty
-	debug "Starting osadecompile, strip trailing whitespace and remove last line if it's empty (which is added by osacompile)"
+	log_line "Starting osadecompile, strip trailing whitespace and remove last line if it's empty (which is added by osacompile)"
 	osadecompile $CLEAN_SCPT_FILE | sed -E 's/[[:space:]]*$//' | perl -pe 'chomp if eof'
 
 elif [[ $CMD = smudge ]]; then
@@ -168,10 +164,10 @@ elif [[ $CMD = smudge ]]; then
 	while IFS= read -r line; do
 		if [[ -z $FIRST_LINE_READ ]]; then
 			FIRST_LINE_READ=YES
-			debug "first line: '$line'"
+			log_line "first line: '$line'"
 			if [[ $line =~ ^(#|\/\/)@osa-lang: ]]; then
 				OSA_LANG=$(echo $line | sed -E 's/^(#|\/\/)@osa-lang:(.*)$/\2/')
-				debug "osa-lang header: '$OSA_LANG'"
+				log_line "osa-lang header: '$OSA_LANG'"
 				continue
 			fi
 		fi
@@ -181,11 +177,11 @@ elif [[ $CMD = smudge ]]; then
 	if [[ -n "$line" ]]; then
 		printf "$line" >> $SMUDGE_TXT_FILE
 	fi
-	debug "osa-lang: $OSA_LANG"
+	log_line "osa-lang: $OSA_LANG"
 	#Create a temporary file, for storing output of osacompile
 	SMUDGE_SCPT_FILE=$SCRATCH/tmp_smudge_stdout.scpt
 	#Perform the compilation
-	debug "Starting osacompilation"
+	log_line "Starting osacompilation"
 	cat $SMUDGE_TXT_FILE | osacompile -l "$OSA_LANG" -o $SMUDGE_SCPT_FILE
 	#Put the output on the stdout
 	cat $SMUDGE_SCPT_FILE
