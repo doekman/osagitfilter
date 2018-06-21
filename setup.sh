@@ -22,7 +22,7 @@ function root_check {
 	fi
 }
 
-SCRIPT_NAME=$(basename $0)
+SCRIPT_NAME=$0
 BASE_DIR=$(dirname $(abspath $0))
 INSTALL_INTO=/usr/local/bin
 COMMANDS='osagetlang osagitfilter'
@@ -118,7 +118,7 @@ else
 	echo "usage: $SCRIPT_NAME (configure|reset|rotate) [options]"
 	echo
 	echo "configure: create symlinks in '$INSTALL_INTO' and add git config ('--no-git' to skip git config, or '--git-log' for logging)"
-	echo "    reset: remove those symlinks"
+	echo "    reset: remove those symlinks and reset git configuration"
 	echo "   rotate: rename any old logs in '$LOG_PATH' to something with a timestamp"
   #hidden option: when needed, this is suggested by command 'configure'
   #echo "create_local_bin: must be run with 'sudo'. Makes sure $INSTALL_INTO is created correctly."
