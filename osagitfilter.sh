@@ -4,7 +4,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-SCRIPT_VER=0.6.3
+SCRIPT_VER=0.6.4
 SCRIPT_NAME=$(basename $0 .sh)
 CALLED_WITH="$0 $@"
 LOG_PATH=~/Library/Logs/Catsdeep/

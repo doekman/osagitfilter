@@ -57,8 +57,8 @@ if [[ $1 = configure ]]; then
 			git config --global filter.osa.required "true"
 		else
 			echo "Configuring git"
-			git config --global filter.osa.clean "osagitfilter clean %f"
-			git config --global filter.osa.smudge "osagitfilter smudge %f"
+			git config --global filter.osa.clean "$INSTALL_INTO/osagitfilter clean %f"
+			git config --global filter.osa.smudge "$INSTALL_INTO/osagitfilter smudge %f"
 			git config --global filter.osa.required "true"
 		fi
 	else
