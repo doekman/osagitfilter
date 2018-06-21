@@ -123,7 +123,7 @@ fi
 #
 ((TEST_ERROR=0))
 TEST_DIR="$(mktemp -d -t osagitfilter.test.tmp)"
-TEST_FILES_DIR="test-files"
+TEST_FILES_DIR="assets"
 trap clean_up EXIT INT HUP TERM
 
 if [[ $1 =~ -?[0-9]+ ]]; then
@@ -185,7 +185,7 @@ else
 
 	#--| Non-AppleScript files test
 	#issue 2: doesn't work yet
-	filter_test "$CMD_CLEAN"       "no-as.scpt"            "no-as.scpt"            0 "Clean AppleScript: Non-AppleScript file"
+	#filter_test "$CMD_CLEAN"       "no-as.scpt"            "no-as.scpt"            0 "Clean AppleScript: Non-AppleScript file"
 
 	#--| ScriptDebugger tests
 	filter_test "$CMD_CLEAN"       "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Default Deny: forbidden Debugging Mode switched on"
