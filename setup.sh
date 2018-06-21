@@ -15,6 +15,13 @@ function abspath {
     fi
 }
 
+function root_check {
+	if [[ $EUID -ne 0 ]]; then
+		>&2 echo "Please run script with 'sudo $(basename $0) $@', exiting..."
+		exit 1
+	fi
+}
+
 SCRIPT_NAME=$(basename $0)
 BASE_DIR=$(dirname $(abspath $0))
 INSTALL_INTO=/usr/local/bin
@@ -23,6 +30,12 @@ LOG_PATH=~/Library/Logs/Catsdeep/
 
 if [[ $1 = configure ]]; then
 	echo "Trying to install the osagitfilter-commands"
+  if [[ ! -d $INSTALL_INTO ]]; then
+    echo "! ERROR: the folder $INSTALL_INTO doesn't exist on your system."
+    echo
+    echo "Create it with: sudo ${SCRIPT_NAME} create_local_bin"
+    exit 1
+  fi
 	for CMD in $COMMANDS; do
 		if [[ -f $INSTALL_INTO/$CMD ]]; then
 			echo "- ERROR: the command '$CMD' is already exists in '$INSTALL_INTO'. No install."
@@ -83,12 +96,32 @@ elif [[ $1 = rotate ]]; then
 		mkdir -p $LOG_PATH
 	fi
 	touch $LOG_PATH/$LOG_NAME.log
+elif [[ $1 = create_local_bin ]]; then
+  root_check
+  if [[ ! -d $INSTALL_INTO ]]; then
+    echo "Creating $INSTALL_INTO"
+    mkdir $INSTALL_INTO
+  fi
+  if [[ $(stat -f '%u' $INSTALL_INTO) != $(id -u ${SUDO_USER}) ]]; then
+    echo "Change ownership to ${SUDO_USER}:admin"
+    chown -R ${SUDO_USER}:admin $INSTALL_INTO
+  fi
+  if [[ ":$PATH:" == *":$INSTALL_INTO:"* ]]; then
+    echo "The folder $INSTALL_INTO is created successfully."
+    echo "Next you can run: $SCRIPT_NAME configure"
+  else
+    echo "You should add $INSTALL_INTO to your PATH variable. This should be the case on every macOS install."
+    echo "You should solve this yourself."
+    exit 1
+  fi
 else
-	echo "usage: ${SCRIPT_NAME} (configure|reset|rotate) [options]"
+	echo "usage: $SCRIPT_NAME (configure|reset|rotate) [options]"
 	echo
 	echo "configure: create symlinks in '$INSTALL_INTO' and add git config ('--no-git' to skip git config, or '--git-log' for logging)"
 	echo "    reset: remove those symlinks"
 	echo "   rotate: rename any old logs in '$LOG_PATH' to something with a timestamp"
+  #hidden option: when needed, this is suggested by command 'configure'
+  #echo "create_local_bin: must be run with 'sudo'. Makes sure $INSTALL_INTO is created correctly."
 	echo
 	echo "Installation status:"
 	for CMD in $COMMANDS; do
