@@ -64,8 +64,11 @@ function show_version {
 }
 
 function debug {
-	[[ $DEBUG = 1 ]] && >&2 printf "DEBUG: %s\n" "$@"
-	[[ $DEBUG = 2 ]] && printf "%s\n" "$@">>$SCRATCH/tmp.log
+	if [[ $DEBUG = 1 ]]; then 
+    >&2 printf "DEBUG: %s\n" "$@"
+  elif [[ $DEBUG = 2 ]]; then
+    printf "%s\n" "$@">>$SCRATCH/tmp.log
+  fi
 }
 
 function ERROR {
