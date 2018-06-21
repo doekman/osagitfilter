@@ -174,36 +174,48 @@ else
 	CMD_SMUDGE="osagitfilter smudge --log"
 	CMD_BOTH="osagitfilter clean --log | osagitfilter smudge --log"
 
-	#--| Plain AppleScript tests
-	filter_test "$CMD_CLEAN"       "as.scpt"               "as-hdr.applescript"    0 "Clean AppleScript"
-	filter_test "$CMD_CLEAN_NO"    "as.scpt"               "as.applescript"        0 "Clean AppleScript (--no-header)"
-	filter_test "$CMD_CLEAN_APPLE" "as.scpt"               "as-hdr.applescript"    0 "Deny non-Apple languages: AppleScript"
-	filter_test "$CMD_SMUDGE"      "as-hdr.applescript"    "as.scpt"               0 "Smudge AppleScript"
-	filter_test "$CMD_SMUDGE"      "as.applescript"        "as.scpt"               0 "Smudge AppleScript (without header)"
-	filter_test "$CMD_BOTH"        "as.scpt"               "as.scpt"               0 "Pass through AppleScript"
-	filter_test "$CMD_BOTH"        "as2.scpt"              "as2.scpt"              0 "Pass through AppleScript; file not ending with empty line"
+	for current_run in  with_logging no_logging; do
+		echo "Grouped run: $current_run"
 
-	#--| Non-AppleScript files test
-	#issue 2: doesn't work yet
-	#filter_test "$CMD_CLEAN"       "no-as.scpt"            "no-as.scpt"            0 "Clean AppleScript: Non-AppleScript file"
+		#--| Plain AppleScript tests
+		filter_test "$CMD_CLEAN"       "as.scpt"               "as-hdr.applescript"    0 "Clean AppleScript"
+		filter_test "$CMD_CLEAN_NO"    "as.scpt"               "as.applescript"        0 "Clean AppleScript (--no-header)"
+		filter_test "$CMD_CLEAN_APPLE" "as.scpt"               "as-hdr.applescript"    0 "Deny non-Apple languages: AppleScript"
+		filter_test "$CMD_SMUDGE"      "as-hdr.applescript"    "as.scpt"               0 "Smudge AppleScript"
+		filter_test "$CMD_SMUDGE"      "as.applescript"        "as.scpt"               0 "Smudge AppleScript (without header)"
+		filter_test "$CMD_BOTH"        "as.scpt"               "as.scpt"               0 "Pass through AppleScript"
+		filter_test "$CMD_BOTH"        "as2.scpt"              "as2.scpt"              0 "Pass through AppleScript; file not ending with empty line"
 
-	#--| ScriptDebugger tests
-	filter_test "$CMD_CLEAN"       "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Default Deny: forbidden Debugging Mode switched on"
-	filter_test "$CMD_CLEAN_ALL"   "asdbg.scpt"            "asdbg-hdr.applescript" 0 "Allow Debugging Mode switched on"
-	filter_test "$CMD_CLEAN_APPLE" "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Deny non-Apple languages: AppleScript Debugger"
-	#--|  This can't be tested, because on compile-time, a GUID is inserted in the header. This GUID doesn't seem to be related 
-	#--|  to «event asDBDBid»... So no easy validation for this one.
-	#--|  Also, when saving with SD, file-size increases big time, so be aware of this when testing.
-	#filter_test "$CMD_SMUDGE"      "asdbg-hdr.applescript" "asdbg.scpt"            0 "Smudge AppleScript Debugger"
-	#filter_test "$CMD_BOTH"        "asdbg.scpt"            "asdbg.scpt"            0 "Pass through AppleScript Debugger"
+		#--| Non-AppleScript files test
+		#issue 2: doesn't work yet
+		#filter_test "$CMD_CLEAN"       "no-as.scpt"            "no-as.scpt"            0 "Clean AppleScript: Non-AppleScript file"
 
-	#--| JavaScript tests
-	filter_test "$CMD_CLEAN"       "js.scpt"               "js-hdr.javascript"     0 "Clean JavaScript"
-	filter_test "$CMD_CLEAN_NO"    "js.scpt"               "js-hdr.javascript"     0 "Clean JavaScript (--no-header)"
-	filter_test "$CMD_CLEAN_APPLE" "js.scpt"               "js-hdr.javascript"     1 "Deny non-Apple languages: JavaScript"
-	filter_test "$CMD_SMUDGE"      "js-hdr.javascript"     "js.scpt"               0 "Smudge JavaScript"
-	filter_test "$CMD_SMUDGE"      "js.javascript"         "js.scpt"               1 "Smudge AppleScript (without header)"
-	filter_test "$CMD_BOTH"        "js.scpt"               "js.scpt"               0 "Pass through JavaScript"
+		#--| ScriptDebugger tests
+		filter_test "$CMD_CLEAN"       "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Default Deny: forbidden Debugging Mode switched on"
+		filter_test "$CMD_CLEAN_ALL"   "asdbg.scpt"            "asdbg-hdr.applescript" 0 "Allow Debugging Mode switched on"
+		filter_test "$CMD_CLEAN_APPLE" "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Deny non-Apple languages: AppleScript Debugger"
+		#--|  This can't be tested, because on compile-time, a GUID is inserted in the header. This GUID doesn't seem to be related 
+		#--|  to «event asDBDBid»... So no easy validation for this one.
+		#--|  Also, when saving with SD, file-size increases big time, so be aware of this when testing.
+		#filter_test "$CMD_SMUDGE"      "asdbg-hdr.applescript" "asdbg.scpt"            0 "Smudge AppleScript Debugger"
+		#filter_test "$CMD_BOTH"        "asdbg.scpt"            "asdbg.scpt"            0 "Pass through AppleScript Debugger"
+
+		#--| JavaScript tests
+		filter_test "$CMD_CLEAN"       "js.scpt"               "js-hdr.javascript"     0 "Clean JavaScript"
+		filter_test "$CMD_CLEAN_NO"    "js.scpt"               "js-hdr.javascript"     0 "Clean JavaScript (--no-header)"
+		filter_test "$CMD_CLEAN_APPLE" "js.scpt"               "js-hdr.javascript"     1 "Deny non-Apple languages: JavaScript"
+		filter_test "$CMD_SMUDGE"      "js-hdr.javascript"     "js.scpt"               0 "Smudge JavaScript"
+		filter_test "$CMD_SMUDGE"      "js.javascript"         "js.scpt"               1 "Smudge AppleScript (without header)"
+		filter_test "$CMD_BOTH"        "js.scpt"               "js.scpt"               0 "Pass through JavaScript"
+
+		# Remove log-flags from commands
+		CMD_CLEAN=${CMD_CLEAN// --log/}
+		CMD_CLEAN_NO=${CMD_CLEAN_NO// --log/}
+		CMD_CLEAN_ALL=${CMD_CLEAN_ALL// --log/}
+		CMD_CLEAN_APPLE=${CMD_CLEAN_APPLE// --log/}
+		CMD_SMUDGE=${CMD_SMUDGE// --log/}
+		CMD_BOTH=${CMD_BOTH// --log/}
+	done
 
 	#--| Instrumentarium to generate a test-error.
 	if (( TEST_ERROR == 2 )); then
