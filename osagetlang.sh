@@ -8,7 +8,7 @@ use framework "OSAKit"
 on run args
 	if (count of args) is not 1 then error "usage: osagetlang path-to-script-file.scpt" number 1
 	set scpt_path to item 1 of args
-	set source_nsurl to current application's NSURL's fileURLWithPath:scpt_path
+	set source_nsurl to current application's |NSURL|'s fileURLWithPath:scpt_path
 	set the_script to current application's OSAScript's alloc()'s initWithContentsOfURL:source_nsurl |error|:(missing value)
 	if the_script is missing value then error "Script cannot be loaded by OSAScript" number 2
 	set osa_lang to the_script's language()'s |name| as text
