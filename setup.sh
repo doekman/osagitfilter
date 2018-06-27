@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
 function abspath {
-    if [[ -d "$1" ]]; then
-        pushd "$1" >/dev/null
-        pwd
-        popd >/dev/null
-    elif [[ -e $1 ]]; then
-        pushd "$(dirname "$1")" >/dev/null
-        echo "$(pwd)/$(basename "$1")"
-        popd >/dev/null
-    else
-        echo "$1" does not exist! >&2
-        return 127
-    fi
+	if [[ -d "$1" ]]; then
+		pushd "$1" >/dev/null
+		pwd
+		popd >/dev/null
+	elif [[ -e $1 ]]; then
+		pushd "$(dirname "$1")" >/dev/null
+		echo "$(pwd)/$(basename "$1")"
+		popd >/dev/null
+	else
+		echo "$1" does not exist! >&2
+		return 127
+	fi
 }
 
 function root_check {
@@ -22,20 +22,47 @@ function root_check {
 	fi
 }
 
+function os_check {
+	VERSION=$(sw_vers | grep "ProductVersion" | sed -E 's/[^.0-9]+//g')
+	#From "10.11.12" get "11"
+	MAJOR=${VERSION:3:2}
+	MIN_MAJOR_VER=10
+	MIN_OS_NAME=Yosemite
+	if [[ $MAJOR -lt $MIN_MAJOR_VER ]]; then
+		>&2 echo "osagitfilter needs at least macOS 10.$MIN_MAJOR_VER ($MIN_OS_NAME) but you have macOS ${VERSION}, exiting..."
+		exit 1
+	elif [[ -n $1 ]]; then
+		echo "osagitfilter needs at least macOS 10.$MIN_MAJOR_VER ($MIN_OS_NAME) but you have macOS ${VERSION}, so that's OK..."
+	fi
+}
+
 SCRIPT_NAME=$0
 BASE_DIR=$(dirname $(abspath $0))
 INSTALL_INTO=/usr/local/bin
 COMMANDS='osagetlang osagitfilter'
 LOG_PATH=~/Library/Logs/Catsdeep/
+VERBOSE=0
+C=unknown
 
-if [[ $1 = configure ]]; then
+while [[ $# -gt 0 ]]; do
+	case $1 in
+		configure | reset | rotate | create_local_bin) C=$1;;
+		-v | --verbose) VERBOSE=1;;
+		--no-git | --git-log) GIT_OPTION=$1;;
+		*) echo "Unknown command/option '$1'";;
+	esac
+	shift;
+done
+
+if [[ $C = configure ]]; then
 	echo "Trying to install the osagitfilter-commands"
-  if [[ ! -d $INSTALL_INTO ]]; then
-    echo "! ERROR: the folder $INSTALL_INTO doesn't exist on your system."
-    echo
-    echo "Create it with: sudo ${SCRIPT_NAME} create_local_bin"
-    exit 1
-  fi
+	os_check $VERBOSE
+	if [[ ! -d $INSTALL_INTO ]]; then
+		echo "! ERROR: the folder $INSTALL_INTO doesn't exist on your system."
+		echo
+		echo "Create it with: sudo ${SCRIPT_NAME} create_local_bin"
+		exit 1
+	fi
 	for CMD in $COMMANDS; do
 		if [[ -f $INSTALL_INTO/$CMD ]]; then
 			echo "- ERROR: the command '$CMD' is already exists in '$INSTALL_INTO'. No install."
@@ -48,9 +75,9 @@ if [[ $1 = configure ]]; then
 		fi
 	done
 	if [[ $(which git) ]]; then
-		if [[ $2 == "--no-git" ]]; then
+		if [[ $GIT_OPTION == "--no-git" ]]; then
 			echo "Skipping git config"
-		elif [[ $2 == "--git-log" ]]; then
+		elif [[ $GIT_OPTION == "--git-log" ]]; then
 			echo "Configuring git with logging options switched on"
 			git config --global filter.osa.clean "$INSTALL_INTO/osagitfilter clean --log %f" 
 			git config --global filter.osa.smudge "$INSTALL_INTO/osagitfilter smudge --log %f" 
@@ -64,7 +91,7 @@ if [[ $1 = configure ]]; then
 	else
 		echo "git is not found; filter is not configured."
 	fi
-elif [[ $1 = reset ]]; then
+elif [[ $C = reset ]]; then
 	for CMD in $COMMANDS; do
 		if [[ -h $INSTALL_INTO/$CMD ]]; then
 			if rm -f $INSTALL_INTO/$CMD; then
@@ -82,7 +109,7 @@ elif [[ $1 = reset ]]; then
 	else
 		echo "git is not found; filter is not removed."
 	fi
-elif [[ $1 = rotate ]]; then
+elif [[ $C = rotate ]]; then
 	LOG_NAME=osagitfilter
 	ROTATE_STAMP=$(date "+%Y-%m-%dT%H-%M-%S")
 	if [[ -d $LOG_PATH ]]; then
@@ -96,32 +123,32 @@ elif [[ $1 = rotate ]]; then
 		mkdir -p $LOG_PATH
 	fi
 	touch $LOG_PATH/$LOG_NAME.log
-elif [[ $1 = create_local_bin ]]; then
-  root_check
-  if [[ ! -d $INSTALL_INTO ]]; then
-    echo "Creating $INSTALL_INTO"
-    mkdir $INSTALL_INTO
-  fi
-  if [[ $(stat -f '%u' $INSTALL_INTO) != $(id -u ${SUDO_USER}) ]]; then
-    echo "Change ownership to ${SUDO_USER}:admin"
-    chown -R ${SUDO_USER}:admin $INSTALL_INTO
-  fi
-  if [[ ":$PATH:" == *":$INSTALL_INTO:"* ]]; then
-    echo "The folder $INSTALL_INTO is created successfully."
-    echo "Next you can run: $SCRIPT_NAME configure"
-  else
-    echo "You should add $INSTALL_INTO to your PATH variable. This should be the case on every macOS install."
-    echo "You should solve this yourself."
-    exit 1
-  fi
+elif [[ $C = create_local_bin ]]; then
+	root_check
+	if [[ ! -d $INSTALL_INTO ]]; then
+		echo "Creating $INSTALL_INTO"
+		mkdir $INSTALL_INTO
+	fi
+	if [[ $(stat -f '%u' $INSTALL_INTO) != $(id -u ${SUDO_USER}) ]]; then
+		echo "Change ownership to ${SUDO_USER}:admin"
+		chown -R ${SUDO_USER}:admin $INSTALL_INTO
+	fi
+	if [[ ":$PATH:" == *":$INSTALL_INTO:"* ]]; then
+		echo "The folder $INSTALL_INTO is created successfully."
+		echo "Next you can run: $SCRIPT_NAME configure"
+	else
+		echo "You should add $INSTALL_INTO to your PATH variable. This should be the case on every macOS install."
+		echo "You should solve this yourself."
+		exit 1
+	fi
 else
-	echo "usage: $SCRIPT_NAME (configure|reset|rotate) [options]"
+	echo "usage: $SCRIPT_NAME (configure|reset|rotate) [options] [-v|--verbose]"
 	echo
 	echo "configure: create symlinks in '$INSTALL_INTO' and add git config ('--no-git' to skip git config, or '--git-log' for logging)"
 	echo "    reset: remove those symlinks and reset git configuration"
 	echo "   rotate: rename any old logs in '$LOG_PATH' to something with a timestamp"
-  #hidden option: when needed, this is suggested by command 'configure'
-  #echo "create_local_bin: must be run with 'sudo'. Makes sure $INSTALL_INTO is created correctly."
+	#hidden option: when needed, this is suggested by command 'configure'
+	#echo "create_local_bin: must be run with 'sudo'. Makes sure $INSTALL_INTO is created correctly."
 	echo
 	echo "Installation status:"
 	for CMD in $COMMANDS; do
@@ -131,6 +158,12 @@ else
 			echo "- '$CMD' is currently NOT installed"
 		fi
 	done
-  echo
-  echo "Script location: ${BASE_DIR}"
+	echo
+	if [[ $VERBOSE == 1 ]]; then
+		echo "script location: $BASE_DIR"
+		echo "   install into: $INSTALL_INTO"
+		echo "       log path: $LOG_PATH"
+		echo
+	fi
+	os_check $VERBOSE
 fi
