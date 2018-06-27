@@ -120,7 +120,7 @@ function clean_up {
 #testing pre-requisites
 if [[ -z $(which osagetlang) || -z $(which osagitfilter) ]]; then
 	>&2 echo "Test-subjects 'osagetlang' and/or 'osagitfilter' not found in the PATH."
-	>&2 echo "Maybe you should run './setup.sh install' first?"
+	>&2 echo "Maybe you should run './setup.sh configure' first?"
 	exit 1
 fi
 
