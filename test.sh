@@ -17,12 +17,12 @@ function lang_test {
 	local TEST_LOG=$TEST_DIR/$TEST_NR.stderr.log
 
 	echo "|≣≡=- $(printf '%2s' $TEST_NR), running lang-test: $TEST_DESCRIPTION"
-	if (( LIST_ONLY == 1 )); then
+	if [[ $HAS_CAPABILITIES != "1" ]]; then
+		echo "- Test skipped because of capabilities"
 		((TESTS_SKIPPED+=1))
 		return
 	fi
-	if [[ $HAS_CAPABILITIES != "1" ]]; then
-		echo "- Test skipped because of capabilities"
+	if (( LIST_ONLY == 1 )); then
 		((TESTS_SKIPPED+=1))
 		return
 	fi
@@ -71,12 +71,12 @@ function filter_test {
 	local TEST_CMD="cat $INPUT_FILE | $CMD > $ACTUAL_FILE"
 	#
 	echo "|≣≡=- $(printf '%2s' $TEST_NR), running filter-test: $TEST_DESCRIPTION"
-	if (( LIST_ONLY == 1 )); then
+	if [[ $HAS_CAPABILITIES != "1" ]]; then
+		echo "- Test skipped because of capabilities"
 		((TESTS_SKIPPED+=1))
 		return
 	fi
-	if [[ $HAS_CAPABILITIES != "1" ]]; then
-		echo "- Test skipped because of capabilities"
+	if (( LIST_ONLY == 1 )); then
 		((TESTS_SKIPPED+=1))
 		return
 	fi
@@ -138,29 +138,34 @@ TEST_DIR="$(mktemp -d -t osagitfilter.test.tmp)"
 TEST_FILES_DIR="assets"
 trap clean_up EXIT INT HUP TERM
 
-if [[ $1 =~ -?[0-9]+ ]]; then
-	if (( $1 == -1 )); then
-		((TEST_ERROR=1))
-		((RUN_TEST=0))
-	elif (( $1 == -2 )); then
-		((TEST_ERROR=2))
-		((RUN_TEST=0))
-	elif (( $1 < 0 )); then
-		((RUN_TEST=${1:1}))
-	else
-		((RUN_TEST=${1}))
-	fi
-elif [[ $1 == "-l" || $1 == "--list" ]]; then
-	((LIST_ONLY=1))
-fi
-
 if [[ -n `osalang | grep "Debugger"` ]]; then 
     HAS_ASDBG=1
 else
     HAS_ASDBG=0
 fi
 
-echo "Starting tests... (to run one test: '$(basename $0) TEST_NR'; to show all tests: '$(basename $0) -l' or '$(basename $0) --list'; use -1 to force failure on lang-tests, -2 for filter-tests)"
+while [[ $# -gt 0 ]]; do
+	if [[ $1 =~ -?[0-9]+ ]]; then
+		if (( $1 == -1 )); then
+			((TEST_ERROR=1))
+			((RUN_TEST=0))
+		elif (( $1 == -2 )); then
+			((TEST_ERROR=2))
+			((RUN_TEST=0))
+		elif (( $1 < 0 )); then
+			((RUN_TEST=${1:1}))
+		else
+			((RUN_TEST=${1}))
+		fi
+	elif [[ $1 == "-l" || $1 == "--list" ]]; then
+		((LIST_ONLY=1))
+	elif [[ $1 == "-na" || $1 == "--no-asdbg" ]]; then
+	    HAS_ASDBG=0
+	fi
+	shift
+done
+
+echo "Starting tests... (to run one test: '$(basename $0) TEST_NR'; to show all tests: '$(basename $0) -l' or '$(basename $0) --list'; -na or --no-asdbg not to test for AppleScript Debugger; use -1 to force failure on lang-tests, -2 for filter-tests)"
 echo "started: $(date '+%Y-%m-%d %H:%M:%S')"
 echo
 
@@ -194,7 +199,7 @@ else
 	CMD_BOTH="osagitfilter clean --log | osagitfilter smudge --log"
 
 	for current_run in  with_logging no_logging; do
-		echo "Grouped run: $current_run"
+		echo "-=≡≣[ Grouped run: $current_run ]≣≡=----------------------------------------------------------"
 
 		#--| Plain AppleScript tests
 		filter_test "$CMD_CLEAN"       "as.scpt"               "as-hdr.applescript"    0 "Clean AppleScript"
