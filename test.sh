@@ -12,11 +12,17 @@ function lang_test {
 	local EXPECTED_LANG=$2
 	local EXPECTED_EXIT_CODE=$3
 	local TEST_DESCRIPTION=$4
+    local HAS_CAPABILITIES=${5:-1}
 	#
 	local TEST_LOG=$TEST_DIR/$TEST_NR.stderr.log
 
 	echo "|≣≡=- $(printf '%2s' $TEST_NR), running lang-test: $TEST_DESCRIPTION"
 	if (( LIST_ONLY == 1 )); then
+		((TESTS_SKIPPED+=1))
+		return
+	fi
+	if [[ $HAS_CAPABILITIES != "1" ]]; then
+		echo "- Test skipped because of capabilities"
 		((TESTS_SKIPPED+=1))
 		return
 	fi
@@ -56,6 +62,7 @@ function filter_test {
 	fi
 	local EXPECTED_EXIT_CODE="$4"
 	local TEST_DESCRIPTION="$5"
+    local HAS_CAPABILITIES=${6:-1}
 	#
 	local EXPECTED_FILENAME=$(basename "$EXPECTED_FILE")
 	local EXPECTED_EXT="${EXPECTED_FILENAME##*.}"
@@ -65,6 +72,11 @@ function filter_test {
 	#
 	echo "|≣≡=- $(printf '%2s' $TEST_NR), running filter-test: $TEST_DESCRIPTION"
 	if (( LIST_ONLY == 1 )); then
+		((TESTS_SKIPPED+=1))
+		return
+	fi
+	if [[ $HAS_CAPABILITIES != "1" ]]; then
+		echo "- Test skipped because of capabilities"
 		((TESTS_SKIPPED+=1))
 		return
 	fi
@@ -142,13 +154,19 @@ elif [[ $1 == "-l" || $1 == "--list" ]]; then
 	((LIST_ONLY=1))
 fi
 
+if [[ -n `osalang | grep "Debugger"` ]]; then 
+    HAS_ASDBG=1
+else
+    HAS_ASDBG=0
+fi
+
 echo "Starting tests... (to run one test: '$(basename $0) TEST_NR'; to show all tests: '$(basename $0) -l' or '$(basename $0) --list'; use -1 to force failure on lang-tests, -2 for filter-tests)"
 echo "started: $(date '+%Y-%m-%d %H:%M:%S')"
 echo
 
 #--| Determine OSA language tests
 lang_test "as.scpt"    "AppleScript"          0 "Get language of an AppleScript file"
-lang_test "asdbg.scpt" "AppleScript Debugger" 0 "Get language of an AppleScript Debugger file"
+lang_test "asdbg.scpt" "AppleScript Debugger" 0 "Get language of an AppleScript Debugger file" $HAS_ASDBG
 lang_test "js.scpt"    "JavaScript"           0 "Get language of an JavaScript file"
 lang_test "perl.scpt"  "Perl"                 1 "Get language of non-existing file"
 lang_test ""           ""                     1 "Get language without arguments"
@@ -192,14 +210,14 @@ else
 		#filter_test "$CMD_CLEAN"       "no-as.scpt"            "no-as.scpt"            0 "Clean AppleScript: Non-AppleScript file"
 
 		#--| ScriptDebugger tests
-		filter_test "$CMD_CLEAN"       "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Default Deny: forbidden Debugging Mode switched on"
-		filter_test "$CMD_CLEAN_ALL"   "asdbg.scpt"            "asdbg-hdr.applescript" 0 "Allow Debugging Mode switched on"
-		filter_test "$CMD_CLEAN_APPLE" "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Deny non-Apple languages: AppleScript Debugger"
+		filter_test "$CMD_CLEAN"       "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Default Deny: forbidden Debugging Mode switched on" $HAS_ASDBG
+		filter_test "$CMD_CLEAN_ALL"   "asdbg.scpt"            "asdbg-hdr.applescript" 0 "Allow Debugging Mode switched on"                   $HAS_ASDBG
+		filter_test "$CMD_CLEAN_APPLE" "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Deny non-Apple languages: AppleScript Debugger"     $HAS_ASDBG
 		#--|  This can't be tested, because on compile-time, a GUID is inserted in the header. This GUID doesn't seem to be related 
 		#--|  to «event asDBDBid»... So no easy validation for this one.
 		#--|  Also, when saving with SD, file-size increases big time, so be aware of this when testing.
-		#filter_test "$CMD_SMUDGE"      "asdbg-hdr.applescript" "asdbg.scpt"            0 "Smudge AppleScript Debugger"
-		#filter_test "$CMD_BOTH"        "asdbg.scpt"            "asdbg.scpt"            0 "Pass through AppleScript Debugger"
+		#filter_test "$CMD_SMUDGE"      "asdbg-hdr.applescript" "asdbg.scpt"            0 "Smudge AppleScript Debugger"                        $HAS_ASDBG
+		#filter_test "$CMD_BOTH"        "asdbg.scpt"            "asdbg.scpt"            0 "Pass through AppleScript Debugger"                  $HAS_ASDBG
 
 		#--| JavaScript tests
 		filter_test "$CMD_CLEAN"       "js.scpt"               "js-hdr.javascript"     0 "Clean JavaScript"
@@ -227,3 +245,4 @@ fi
 
 echo
 echo "$TEST_NR tests have ran, $TESTS_OK tested OK, $TESTS_NOK tested NOK and $TESTS_SKIPPED have been skipped."
+echo "ended: $(date '+%Y-%m-%d %H:%M:%S')"
