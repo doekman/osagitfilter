@@ -127,26 +127,31 @@ if [[ $CMD = clean ]]; then
 	#determine osa-language of input file
 	OSA_LANG=$($OSA_GET_LANG_CMD $CLEAN_SCPT_FILE)
 	log_line "OSA lang: $OSA_LANG"
-	log_line "forbidden langs: ${FORBIDDEN[@]:-}"
 
-	#check if the osa-lang is forbidden
-	for BL in "${FORBIDDEN[@]:-}"; do
-		if [[ $BL = $OSA_LANG ]]; then
-			ERROR 1 "OSA language '$BL' is forbidden by $SCRIPT_NAME"
-		fi
-	done
-
-	#write header
-	if [[ $OSA_LANG = "JavaScript" ]]; then
-		comment="//"
+	if [[ $OSA_LANG = "-" ]]; then
+		#Not an OSA file, just let it pass through
+		cat $CLEAN_SCPT_FILE
 	else
-		comment="#"
-	fi
-	echo "$comment@osa-lang:$OSA_LANG"
+		#check if the osa-lang is forbidden
+		log_line "forbidden langs: ${FORBIDDEN[@]:-}"
+		for BL in "${FORBIDDEN[@]:-}"; do
+			if [[ $BL = $OSA_LANG ]]; then
+				ERROR 1 "OSA language '$BL' is forbidden by $SCRIPT_NAME"
+			fi
+		done
+
+		#write header
+		if [[ $OSA_LANG = "JavaScript" ]]; then
+			comment="//"
+		else
+			comment="#"
+		fi
+		echo "$comment@osa-lang:$OSA_LANG"
 	
-	#decompile to text, and strip tailing whitespace (never newlines, because of $) and finally remove last line if it's empty
-	log_line "Starting osadecompile, strip trailing whitespace and remove last line if it's empty (which is added by osacompile)"
-	osadecompile $CLEAN_SCPT_FILE | sed -E 's/[[:space:]]*$//' | perl -pe 'chomp if eof'
+		#decompile to text, and strip tailing whitespace (never newlines, because of $) and finally remove last line if it's empty
+		log_line "Starting osadecompile, strip trailing whitespace and remove last line if it's empty (which is added by osacompile)"
+		osadecompile $CLEAN_SCPT_FILE | sed -E 's/[[:space:]]*$//' | perl -pe 'chomp if eof'
+	fi
 
 elif [[ $CMD = smudge ]]; then
 

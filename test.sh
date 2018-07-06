@@ -210,7 +210,8 @@ else
 
 		#--| Non-AppleScript files test
 		#issue 2: doesn't work yet
-		#filter_test "$CMD_CLEAN"       "no-as.scpt"            "no-as.scpt"            0 "Clean AppleScript: Non-AppleScript file"
+		filter_test "$CMD_CLEAN"       "no-as.scpt"            "no-as.scpt"            0 "Clean AppleScript: Non-AppleScript (ASCII) file"
+		filter_test "$CMD_CLEAN"       "osa-logo.png"          "osa-logo.png"          0 "Clean AppleScript: Non-AppleScript (binary) file"
 
 		#--| ScriptDebugger tests
 		filter_test "$CMD_CLEAN"       "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Default Deny: forbidden Debugging Mode switched on" $HAS_ASDBG
