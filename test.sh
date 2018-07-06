@@ -192,7 +192,6 @@ else
 	filter_test "osagitfilter -h"  "as.scpt"               "-"             0 "Show usage screen (--help)"
 
 	CMD_CLEAN="osagitfilter clean --log"
-	CMD_CLEAN_NO="osagitfilter clean --no-header --log"
 	CMD_CLEAN_ALL="osagitfilter clean --forbidden - --log"
 	CMD_CLEAN_APPLE="osagitfilter clean --forbidden 'JavaScript:AppleScript Debugger' --log"
 	CMD_SMUDGE="osagitfilter smudge --log"
@@ -203,7 +202,6 @@ else
 
 		#--| Plain AppleScript tests
 		filter_test "$CMD_CLEAN"       "as.scpt"               "as-hdr.applescript"    0 "Clean AppleScript"
-		filter_test "$CMD_CLEAN_NO"    "as.scpt"               "as.applescript"        0 "Clean AppleScript (--no-header)"
 		filter_test "$CMD_CLEAN_APPLE" "as.scpt"               "as-hdr.applescript"    0 "Deny non-Apple languages: AppleScript"
 		filter_test "$CMD_SMUDGE"      "as-hdr.applescript"    "as.scpt"               0 "Smudge AppleScript"
 		filter_test "$CMD_SMUDGE"      "as.applescript"        "as.scpt"               0 "Smudge AppleScript (without header)"
@@ -226,7 +224,6 @@ else
 
 		#--| JavaScript tests
 		filter_test "$CMD_CLEAN"       "js.scpt"               "js-hdr.javascript"     0 "Clean JavaScript"
-		filter_test "$CMD_CLEAN_NO"    "js.scpt"               "js-hdr.javascript"     0 "Clean JavaScript (--no-header)"
 		filter_test "$CMD_CLEAN_APPLE" "js.scpt"               "js-hdr.javascript"     1 "Deny non-Apple languages: JavaScript"
 		filter_test "$CMD_SMUDGE"      "js-hdr.javascript"     "js.scpt"               0 "Smudge JavaScript"
 		filter_test "$CMD_SMUDGE"      "js.javascript"         "js.scpt"               1 "Smudge AppleScript (without header)"
@@ -234,7 +231,6 @@ else
 
 		# Remove log-flags from commands
 		CMD_CLEAN=${CMD_CLEAN// --log/}
-		CMD_CLEAN_NO=${CMD_CLEAN_NO// --log/}
 		CMD_CLEAN_ALL=${CMD_CLEAN_ALL// --log/}
 		CMD_CLEAN_APPLE=${CMD_CLEAN_APPLE// --log/}
 		CMD_SMUDGE=${CMD_SMUDGE// --log/}

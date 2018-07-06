@@ -14,7 +14,6 @@ OSA_LANG=$DEFAULT_OSA_LANG
 FORBIDDEN_TEXT="AppleScript Debugger" #colon seperated list
 FORBIDDEN=()
 DO_LOG=0
-WRITE_HEADER=1
 FILE=
 SCRATCH=
 
@@ -44,13 +43,12 @@ function usage {
 	echo
 	echo "arguments  (all optional):"
 	echo "  -f, --forbidden  Provide (colon-seperated) forbidden languages. '-' for empty list, defaults to 'AppleScript Debugger'"
-	echo "  -n, --no-header  Don't write a OSA-lang header for the default language (AppleScript)"
 	echo "  -l, --log        Write debug info to '$LOG_PATH/$SCRIPT_NAME.log'"
 	echo "  -h, -?, --help   Show this help message and exit"
 	echo "  -v, --version    Show program's version number and exit"
 	echo "  FILE             Filename of current stream; not actually used but comes in handy when debugging"
 	echo
-	echo "This script translates input from stdin to stdout only. The options '--forbidden' and '--no-header' "
+	echo "This script translates input from stdin to stdout only. The option '--forbidden' "
 	echo "are only used with the 'clean' command."
 	if [[ $# > 0 ]]; then
 		ERROR 1 "$@"
@@ -90,7 +88,6 @@ fi
 while (( $# > 0 )) ; do
   case $1 in
 	-f | --forbidden) [[ $# > 1 ]] || usage "FORBIDDEN argument expected after $1"; FORBIDDEN_TEXT=$2; shift;;
-	-n | --no-header) WRITE_HEADER=0;;
 	-l | --log) DO_LOG=1;;
 	-h | -\? | --help) usage;;
 	-v | --version) show_version;exit 0;;
@@ -140,16 +137,12 @@ if [[ $CMD = clean ]]; then
 	done
 
 	#write header
-	if [[ $WRITE_HEADER = 0 && "$OSA_LANG" = "$DEFAULT_OSA_LANG" ]]; then
-		log_line "default OSA language is AppleScript: writing no header because of --no-header"
+	if [[ $OSA_LANG = "JavaScript" ]]; then
+		comment="//"
 	else
-		if [[ $OSA_LANG = "JavaScript" ]]; then
-			comment="//"
-		else
-			comment="#"
-		fi
-		echo "$comment@osa-lang:$OSA_LANG"
+		comment="#"
 	fi
+	echo "$comment@osa-lang:$OSA_LANG"
 	
 	#decompile to text, and strip tailing whitespace (never newlines, because of $) and finally remove last line if it's empty
 	log_line "Starting osadecompile, strip trailing whitespace and remove last line if it's empty (which is added by osacompile)"
