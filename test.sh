@@ -143,6 +143,7 @@ if [[ -n `osalang | grep "Debugger"` ]]; then
 else
     HAS_ASDBG=0
 fi
+GROUP_RUN=0
 
 while [[ $# -gt 0 ]]; do
 	if [[ $1 =~ -?[0-9]+ ]]; then
@@ -159,13 +160,22 @@ while [[ $# -gt 0 ]]; do
 		fi
 	elif [[ $1 == "-l" || $1 == "--list" ]]; then
 		((LIST_ONLY=1))
+	elif [[ $1 == "-gr" || $1 == "--group-run" ]]; then
+	    GROUP_RUN=1
 	elif [[ $1 == "-na" || $1 == "--no-asdbg" ]]; then
 	    HAS_ASDBG=0
 	fi
 	shift
 done
 
-echo "Starting tests... (to run one test: '$(basename $0) TEST_NR'; to show all tests: '$(basename $0) -l' or '$(basename $0) --list'; -na or --no-asdbg not to test for AppleScript Debugger; use -1 to force failure on lang-tests, -2 for filter-tests)"
+echo "Starting tests... "
+echo "  ---8<-------------------------------------------------------------------"
+echo "  To run one test: '$(basename $0) TEST_NR'"
+echo "  To show all tests: '$(basename $0) --list' (or '-l')"
+echo "  Force no AppleScript Debugger tests: '$(basename $0) --no-asdbg (or '-na')"
+echo "  Use -1 (one) to force failure on lang-tests, -2 for filter-tests"
+echo "  Force grouped run: '$(basename $0) --group-run' (or '-gr')"
+echo "  ---8<-------------------------------------------------------------------"
 echo "started: $(date '+%Y-%m-%d %H:%M:%S')"
 echo
 
@@ -192,6 +202,7 @@ else
 	filter_test "osagitfilter -h"  "as.scpt"               "-"             0 "Show usage screen (--help)"
 
 	CMD_CLEAN="osagitfilter clean --log"
+	CMD_CLEAN_2="$CMD_CLEAN | $CMD_CLEAN"
 	CMD_CLEAN_ALL="osagitfilter clean --forbidden - --log"
 	CMD_CLEAN_APPLE="osagitfilter clean --forbidden 'JavaScript:AppleScript Debugger' --log"
 	CMD_SMUDGE="osagitfilter smudge --log"
@@ -202,6 +213,7 @@ else
 
 		#--| Plain AppleScript tests
 		filter_test "$CMD_CLEAN"       "as.scpt"               "as-hdr.applescript"    0 "Clean AppleScript"
+		filter_test "$CMD_CLEAN_2"     "as.scpt"               "as-hdr.applescript"    0 "Twice clean AppleScript"
 		filter_test "$CMD_CLEAN_APPLE" "as.scpt"               "as-hdr.applescript"    0 "Deny non-Apple languages: AppleScript"
 		filter_test "$CMD_SMUDGE"      "as-hdr.applescript"    "as.scpt"               0 "Smudge AppleScript"
 		filter_test "$CMD_SMUDGE"      "as.applescript"        "as.scpt"               0 "Smudge AppleScript (without header)"
@@ -209,9 +221,10 @@ else
 		filter_test "$CMD_BOTH"        "as2.scpt"              "as2.scpt"              0 "Pass through AppleScript; file not ending with empty line"
 
 		#--| Non-AppleScript files test
-		#issue 2: doesn't work yet
+		#issue 2: doesn't work yet completely
 		filter_test "$CMD_CLEAN"       "no-as.scpt"            "no-as.scpt"            0 "Clean AppleScript: Non-AppleScript (ASCII) file"
 		filter_test "$CMD_CLEAN"       "osa-logo.png"          "osa-logo.png"          0 "Clean AppleScript: Non-AppleScript (binary) file"
+		filter_test "$CMD_CLEAN_2"     "osa-logo.png"          "osa-logo.png"          0 "Twice clean AppleScript: Non-AppleScript (binary) file"
 
 		#--| ScriptDebugger tests
 		filter_test "$CMD_CLEAN"       "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Default Deny: forbidden Debugging Mode switched on" $HAS_ASDBG
@@ -230,6 +243,10 @@ else
 		filter_test "$CMD_SMUDGE"      "js.javascript"         "js.scpt"               1 "Smudge AppleScript (without header)"
 		filter_test "$CMD_BOTH"        "js.scpt"               "js.scpt"               0 "Pass through JavaScript"
 
+		if [[ $GROUP_RUN = 0 ]]; then
+			echo "Skipped grouped run"
+			break
+		fi
 		# Remove log-flags from commands
 		CMD_CLEAN=${CMD_CLEAN// --log/}
 		CMD_CLEAN_ALL=${CMD_CLEAN_ALL// --log/}
