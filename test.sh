@@ -175,7 +175,7 @@ lang_test "asdbg.scpt" "AppleScript Debugger" 0 "Get language of an AppleScript 
 lang_test "js.scpt"    "JavaScript"           0 "Get language of an JavaScript file"
 lang_test "perl.scpt"  "Perl"                 1 "Get language of non-existing file"
 lang_test ""           ""                     1 "Get language without arguments"
-lang_test "no-as.scpt" ""                     1 "Get language of a non-AppleScript file"
+lang_test "no-as.scpt" "-"                    0 "Get language of a non-AppleScript file"
 
 #--| Instrumentarium to generate a test-error.
 if (( TEST_ERROR == 1 )); then

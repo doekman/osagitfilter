@@ -6,7 +6,7 @@ use framework "Foundation"
 use framework "OSAKit"
 
 on run args
-	if (count of args) is not 1 then error "usage: osagetlang path-to-script-file.scpt" number 1
+	if (count of args) is not 1 then error "usage: osagetlang path/to/script-file.scpt" number 1
 	set scpt_path to item 1 of args
 	if scpt_path does not start with "/" then
 		# If it's not an absolute path, make it (since 'read' below gives the following warning on stderr otherwise)
@@ -26,7 +26,8 @@ on run args
 		set file_handle to POSIX file scpt_path
 		set file_header to read file_handle from 1 to bytes_to_read
 		if expected_header ≠ file_header then
-			error "File is not an OSA script file (the first " & bytes_to_read & " characters are '" & file_header & "')" number 3
+			#error "File is not an OSA script file (the first " & bytes_to_read & " characters are '" & file_header & "')" number 3
+            set osa_lang to "-" --Output for non-OSA file
 		end if
 	end if
 	get osa_lang
