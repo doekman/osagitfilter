@@ -4,7 +4,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-SCRIPT_VER=0.6.5
+SCRIPT_VER=0.6.6dev
 SCRIPT_NAME=$(basename $0 .sh)
 CALLED_WITH="$0 $@"
 LOG_PATH=~/Library/Logs/Catsdeep/
@@ -42,7 +42,7 @@ function usage {
 	echo "  smudge           Translates text stored in git to OSA script"
 	echo
 	echo "arguments  (all optional):"
-	echo "  -f, --forbidden  Provide (colon-seperated) forbidden languages. '-' for empty list, defaults to 'AppleScript Debugger'"
+	echo "  -f, --forbidden  Provide (colon-seperated) forbidden languages. Use '-' for empty list; defaults to 'AppleScript Debugger'"
 	echo "  -l, --log        Write debug info to '$LOG_PATH/$SCRIPT_NAME.log'"
 	echo "  -h, -?, --help   Show this help message and exit"
 	echo "  -v, --version    Show program's version number and exit"
@@ -109,13 +109,13 @@ IFS=$'\n\t'
 SCRATCH=$(mktemp -d -t osagitfilter.tmp)
 
 log_line "---=[ $(show_version) ]=----------------------------------------------"
+log_line "command: $CMD"
 log_line "started: $(date '+%Y-%m-%d %H:%M:%S')"
 log_line "sw_vers: $(sw_vers | tr -d '\t' | tr '\n' ';')"
 log_line "call: $CALLED_WITH"
 log_line "caller: $(ps -o args= $PPID)" #see: https://stackoverflow.com/a/26985984/56
 log_line "scratch: $SCRATCH"
 log_line "pwd: $(pwd)"
-log_line "command: $CMD"
 log_line "filename: '$FILE'"
 
 if [[ $CMD = clean ]]; then
@@ -146,44 +146,40 @@ if [[ $CMD = clean ]]; then
 		else
 			comment="#"
 		fi
+		# Possible lines that can be written (22-31 bytes, excluding newline):
+		# "#@osa-lang:AppleScript"
+		# "#@osa-lang:AppleScript Debugger"
+		# "//@osa-lang:JavaScript"
 		echo "$comment@osa-lang:$OSA_LANG"
 	
-		#decompile to text, and strip tailing whitespace (never newlines, because of $) and finally remove last line if it's empty
+		#decompile to text, and strip tailing whitespace and finally remove last line if it's empty
 		log_line "Starting osadecompile, strip trailing whitespace and remove last line if it's empty (which is added by osacompile)"
 		osadecompile $CLEAN_SCPT_FILE | sed -E 's/[[:space:]]*$//' | perl -pe 'chomp if eof'
 	fi
 
 elif [[ $CMD = smudge ]]; then
-
 	#Create a temporary file, for "random access" of stdin
 	SMUDGE_TXT_FILE=$SCRATCH/tmp_smudge_stdin.txt
-	#Read git's input and store it in the temp-file, except the first line when it's a meta-comment
-	FIRST_LINE_READ=
-	while IFS= read -r line; do
-		if [[ -z $FIRST_LINE_READ ]]; then
-			FIRST_LINE_READ=YES
-			log_line "first line: '$line'"
-			if [[ $line =~ ^(#|\/\/)@osa-lang: ]]; then
-				OSA_LANG=$(echo $line | sed -E 's/^(#|\/\/)@osa-lang:(.*)$/\2/')
-				log_line "osa-lang header: '$OSA_LANG'"
-				continue
-			fi
-		fi
-		echo "$line" >> $SMUDGE_TXT_FILE
-	done < /dev/stdin
-	#when there are characters between last newline and EOF, print these too (basically $line is not a real line in this case)
-	if [[ -n "$line" ]]; then
-		printf "$line" >> $SMUDGE_TXT_FILE
-	fi
-	log_line "osa-lang: $OSA_LANG"
-	#Create a temporary file, for storing output of osacompile
-	SMUDGE_SCPT_FILE=$SCRATCH/tmp_smudge_stdout.scpt
-	#Perform the compilation
-	log_line "Starting osacompilation"
-	cat $SMUDGE_TXT_FILE | osacompile -l "$OSA_LANG" -o $SMUDGE_SCPT_FILE
-	#Put the output on the stdout
-	cat $SMUDGE_SCPT_FILE
+	cat - > $SMUDGE_TXT_FILE
 
+	# First get first 42 bytes (more than the max osa header) to make fail safe for binary files
+	# then take the first line (if there are more) and only return the header value
+	FIRST_LINE=$(head -c 42 < $SMUDGE_TXT_FILE | head -n 1)
+	OSA_HDR_RX=$'^(//|#)@osa-lang:(.+)$'
+	if [[ $FIRST_LINE =~ $OSA_HDR_RX ]]; then
+		OSA_LANG=${BASH_REMATCH[2]}
+		log_line "osa-lang header: '$OSA_LANG'"
+		#Create a temporary file, for storing output of osacompile
+		SMUDGE_SCPT_FILE=$SCRATCH/tmp_smudge_stdout.scpt
+		# Remove header and perform the compilation
+		log_line "Starting osacompilation"
+		sed '1d' < $SMUDGE_TXT_FILE | osacompile -l "$OSA_LANG" -o $SMUDGE_SCPT_FILE
+		# Osacompile always outputs to file puts the output on a file, so cat that file...
+		cat $SMUDGE_SCPT_FILE
+	else
+		# no header, so not an OSA file, just let it pass through
+		cat $SMUDGE_TXT_FILE
+	fi
 else
 	usage "unexpected command (SHOULD NOT HAPPEN)"
 fi
