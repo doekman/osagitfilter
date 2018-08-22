@@ -2,6 +2,23 @@
 
 # This file + terminal output is best viewed with the Menlo-font (because of |≣≡=-) 
 
+function abspath {
+    if [[ -d "$1" ]]
+    then
+        pushd "$1" >/dev/null
+        pwd
+        popd >/dev/null
+    elif [[ -e $1 ]]
+    then
+        pushd "$(dirname "$1")" >/dev/null
+        echo "$(pwd)/$(basename "$1")"
+        popd >/dev/null
+    else
+        echo "$1" does not exist! >&2
+        return 127
+    fi
+}
+
 function lang_test {
 	((TEST_NR+=1))
 	if (( RUN_TEST != 0 && TEST_NR != RUN_TEST )); then
@@ -9,7 +26,13 @@ function lang_test {
 		return
 	fi
 	#input arguments
-	local CMD="osagetlang $TEST_FILES_DIR/$1"
+	if [[ ${1:0:1} == ";" ]]; then
+		# if first argument starts with ";", then use it completely as command without the ";"
+		local CMD="${1:1}"
+	else
+		# Otherwise, the argument it the file to get the language of
+		local CMD="osagetlang $TEST_FILES_DIR/$1"
+	fi
 	local EXPECTED_LANG=$2
 	local EXPECTED_EXIT_CODE=$3
 	local TEST_DESCRIPTION=$4
@@ -142,7 +165,8 @@ fi
 #
 ((TEST_ERROR=0))
 TEST_DIR="$(mktemp -d -t osagitfilter.test.tmp)"
-TEST_FILES_DIR="assets"
+SCRIPT_DIR="$(abspath $(dirname $0))"
+TEST_FILES_DIR="$SCRIPT_DIR/assets"
 trap clean_up EXIT INT HUP TERM
 
 if [[ -n `osalang | grep "Debugger"` ]]; then 
@@ -187,12 +211,14 @@ echo "started: $(date '+%Y-%m-%d %H:%M:%S')"
 echo
 
 #--| Determine OSA language tests
-lang_test "as.scpt"    "AppleScript"          0 "Get language of an AppleScript file"
-lang_test "asdbg.scpt" "AppleScript Debugger" 0 "Get language of an AppleScript Debugger file" $HAS_ASDBG
-lang_test "js.scpt"    "JavaScript"           0 "Get language of an JavaScript file"
-lang_test "perl.scpt"  "Perl"                 1 "Get language of non-existing file"
-lang_test ""           ""                     1 "Get language without arguments"
-lang_test "no-as.scpt" "-"                    0 "Get language of a non-AppleScript file"
+lang_test "as.scpt"     "AppleScript"          0 "Get language of an AppleScript file"
+lang_test "asdbg.scpt"  "AppleScript Debugger" 0 "Get language of an AppleScript Debugger file" $HAS_ASDBG
+lang_test "js.scpt"     "JavaScript"           0 "Get language of an JavaScript file"
+lang_test "perl.scpt"   "Perl"                 1 "Get language of non-existing file"
+lang_test ""            ""                     1 "Get language without arguments"
+lang_test "no-as.scpt"  "-"                    0 "Get language of a non-AppleScript file"
+cmd=';cd '$TEST_FILES_DIR'; osagetlang as.scpt' 
+lang_test "$cmd"        "AppleScript"          0 "Get language of an AppleScript file (relative path)"
 
 #--| Instrumentarium to generate a test-error.
 if (( TEST_ERROR == 1 )); then

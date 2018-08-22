@@ -5,16 +5,19 @@ use scripting additions
 use framework "Foundation"
 use framework "OSAKit"
 
+on get_absolute_path(path)
+	set cmd to "x=" & quoted form of path & ";pushd \"$(dirname \"$x\")\" >/dev/null;echo \"$(pwd)/$(basename \"$x\")\""
+	set scpt_path to do shell script cmd
+end
+
 on run args
 	if (count of args) is not 1 then error "usage: osagetlang path/to/script-file.scpt" number 1
-	set scpt_path to item 1 of args
-	if scpt_path does not start with "/" then
-		# If it's not an absolute path, make it (since 'read' below gives the following warning on stderr otherwise)
-		#    ...CFURLGetFSRef was passed an URL which has no scheme (the URL will not work with other CFURL routines)
-		set base_folder to POSIX path of ((path to me as text) & "::")
-		set scpt_path to base_folder & scpt_path
-	end
+	# Make sure it's an absolute path (since 'read' below gives the following warning on stderr otherwise)
+	#    ...CFURLGetFSRef was passed an URL which has no scheme (the URL will not work with other CFURL routines)
+	set scpt_path to get_absolute_path(item 1 of args)
+
 	set source_nsurl to current application's |NSURL|'s fileURLWithPath:scpt_path
+	#return (source_nsurl's |path|) as text
 	set the_script to current application's OSAScript's alloc()'s initWithContentsOfURL:source_nsurl |error|:(missing value)
 	if the_script is missing value then error "Script cannot be loaded by OSAScript" number 2
 	set osa_lang to the_script's language()'s |name| as text
@@ -27,7 +30,7 @@ on run args
 		set file_header to read file_handle from 1 to bytes_to_read
 		if expected_header ≠ file_header then
 			#error "File is not an OSA script file (the first " & bytes_to_read & " characters are '" & file_header & "')" number 3
-            set osa_lang to "-" --Output for non-OSA file
+			set osa_lang to "-" --Output for non-OSA file
 		end if
 	end if
 	get osa_lang
