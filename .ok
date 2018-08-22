@@ -1,0 +1,7 @@
+# osagitfilter tests
+./test.sh --list       # List all test cases
+./test.sh "$@"         # Provide test-nr to only run that one
+./test.sh --group-run  # Run most extensive tests
+
+#
+./setup.sh             # Show installation status
