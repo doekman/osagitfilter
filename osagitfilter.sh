@@ -151,7 +151,7 @@ if [[ $CMD = clean ]]; then
 		# "#@osa-lang:AppleScript Debugger"
 		# "//@osa-lang:JavaScript"
 		echo "$comment@osa-lang:$OSA_LANG"
-	
+
 		#decompile to text, and strip tailing whitespace and finally remove last line if it's empty
 		log_line "Starting osadecompile, strip trailing whitespace and remove last line if it's empty (which is added by osacompile)"
 		osadecompile $CLEAN_SCPT_FILE | sed -E 's/[[:space:]]*$//' | perl -pe 'chomp if eof'
@@ -171,9 +171,11 @@ elif [[ $CMD = smudge ]]; then
 		log_line "osa-lang header: '$OSA_LANG'"
 		#Create a temporary file, for storing output of osacompile
 		SMUDGE_SCPT_FILE=$SCRATCH/tmp_smudge_stdout.scpt
-		# Remove header and perform the compilation
+		# Remove header (first line) and perform the compilation
 		log_line "Starting osacompilation"
-		sed '1d' < $SMUDGE_TXT_FILE | osacompile -l "$OSA_LANG" -o $SMUDGE_SCPT_FILE
+		# perl -pe'1..1and$_=""'
+		# sed '1d'
+		perl -pe'1..1and$_=""' < $SMUDGE_TXT_FILE | osacompile -l "$OSA_LANG" -o $SMUDGE_SCPT_FILE
 		# Osacompile always outputs to file puts the output on a file, so cat that file...
 		cat $SMUDGE_SCPT_FILE
 	else
