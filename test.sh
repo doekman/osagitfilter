@@ -264,11 +264,13 @@ else
 
 		#--| ScriptDebugger tests
 		filter_test "$CMD_CLEAN"       "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Default Deny: forbidden Debugging Mode switched on" $HAS_ASDBG
-		filter_test "$CMD_CLEAN_ALL"   "asdbg.scpt"            "asdbg-hdr.applescript" 0 "Allow Debugging Mode switched on"                   $HAS_ASDBG
+		#--|  ALSO: switched off, because Mojave doesn't allow AppleScript Debugger to be ran from command line or stuff?
+		##filter_test "$CMD_CLEAN_ALL"   "asdbg.scpt"            "asdbg-hdr.applescript" 0 "Allow Debugging Mode switched on"                   $HAS_ASDBG
 		filter_test "$CMD_CLEAN_APPLE" "asdbg.scpt"            "asdbg-hdr.applescript" 1 "Deny non-Apple languages: AppleScript Debugger"     $HAS_ASDBG
 		#--|  This can't be tested completely, because .scpt files always are different, even if they look the same (so no diffing)
-		filter_test "$CMD_SMUDGE"      "asdbg-hdr.applescript" "asdbg.scpt"            0 "Smudge AppleScript Debugger"                        $HAS_ASDBG 1
-		filter_test "$CMD_BOTH_ALL"    "asdbg.scpt"            "asdbg.scpt"            0 "Pass through AppleScript Debugger"                  $HAS_ASDBG 1
+		#--|  ALSO: switched off, because Mojave doesn't allow AppleScript Debugger to be ran from command line or stuff?
+		##filter_test "$CMD_SMUDGE"      "asdbg-hdr.applescript" "asdbg.scpt"            0 "Smudge AppleScript Debugger"                        $HAS_ASDBG 1
+		##filter_test "$CMD_BOTH_ALL"    "asdbg.scpt"            "asdbg.scpt"            0 "Pass through AppleScript Debugger"                  $HAS_ASDBG 1
 
 		#--| JavaScript tests
 		filter_test "$CMD_CLEAN"       "js.scpt"               "js-hdr.javascript"     0 "Clean JavaScript"
