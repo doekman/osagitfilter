@@ -42,6 +42,14 @@ Some git-clients, like GitHub Desktop, can be quite chatty so log files grow qui
 Default, it prevents from accidently committing AppleScript files with Debugging Mode (from [AppleScript Debugger][asdbg]) switched on. Run `osagitfilter --help` to see more options.
 
 
+Problems
+--------
+
+If you want to (re-)apply osagitfilter to a repository (for example, if you already added your binary `.scpt` file to git, but want to use osagitfilter), execute the following statement:
+
+	git add --renormalize .
+
+
 Credits
 -------
 
