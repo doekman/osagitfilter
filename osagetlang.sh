@@ -27,11 +27,16 @@ on run args
 	end if
 
 	set source_nsurl to current application's |NSURL|'s fileURLWithPath:scpt_path
-	set the_script to current application's OSAScript's alloc()'s initWithContentsOfURL:source_nsurl |error|:(missing value)
-	if the_script is missing value then
-		# macOS Mojave blocks loading Script Debugger component. Assume it's AppleScript Debugger:
+	try
+		set the_script to current application's OSAScript's alloc()'s initWithContentsOfURL:source_nsurl |error|:(missing value)
+	on error number -10000
+		# macOS Mojave, when running in shell context, blocks loading Script Debugger component. Assume it's AppleScript Debugger:
 		# see: https://forum.latenightsw.com/t/mojave-changes-make-osadecompile-fail-on-applescript-debugger-files/1854
-		set osa_lang to "AppleScript Debugger"
+		# OSAScript also writes an error message to stderr.
+		return "AppleScript Debugger"
+	end try
+	if the_script is missing value then
+		return "AppleScript Debugger" # also macOS Mojave, but when ran in GUI context
 	else
 		set osa_lang to the_script's language()'s |name| as text
 		if osa_lang is "AppleScript" then
