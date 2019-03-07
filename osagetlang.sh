@@ -20,7 +20,7 @@ on run args
 
 	if (count of args) is not 1 then error "usage: osagetlang path/to/script-file.scpt" number 1
 	# Make sure it's an absolute path (since 'read' below gives the following warning on stderr otherwise)
-	#    ...CFURLGetFSRef was passed an URL which has no scheme (the URL will not work with other CFURL routines)
+	#	 ...CFURLGetFSRef was passed an URL which has no scheme (the URL will not work with other CFURL routines)
 	set scpt_path to get_absolute_path(item 1 of args)
 	if not posix_file_exists(scpt_path) then
 		error "File doesn't exist" number 1
@@ -48,7 +48,7 @@ on run args
 			set file_header to read file_handle from 1 to bytes_to_read
 			if expected_header ≠ file_header then
 				#error "File is not an OSA script file (the first " & bytes_to_read & " characters are '" & file_header & "')" number 3
-	            set osa_lang to "-" --Output for non-OSA file
+				set osa_lang to "-" --Output for non-OSA file
 			end if
 		end if
 	end if

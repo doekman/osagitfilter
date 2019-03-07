@@ -38,15 +38,15 @@ function usage {
 	echo "usage: $SCRIPT_NAME command [options] [FILE]"
 	echo
 	echo "command (use one):"
-	echo "  clean            Translates OSA script to text, to be put into git"
-	echo "  smudge           Translates text stored in git to OSA script"
+	echo "	clean			 Translates OSA script to text, to be put into git"
+	echo "	smudge			 Translates text stored in git to OSA script"
 	echo
-	echo "arguments  (all optional):"
-	echo "  -f, --forbidden  Provide (colon-seperated) forbidden languages. Use '-' for empty list; defaults to 'AppleScript Debugger'"
-	echo "  -l, --log        Write debug info to '$LOG_PATH/$SCRIPT_NAME.log'"
-	echo "  -h, -?, --help   Show this help message and exit"
-	echo "  -v, --version    Show program's version number and exit"
-	echo "  FILE             Filename of current stream; not actually used but comes in handy when debugging"
+	echo "arguments	 (all optional):"
+	echo "	-f, --forbidden	 Provide (colon-seperated) forbidden languages. Use '-' for empty list; defaults to 'AppleScript Debugger'"
+	echo "	-l, --log		 Write debug info to '$LOG_PATH/$SCRIPT_NAME.log'"
+	echo "	-h, -?, --help	 Show this help message and exit"
+	echo "	-v, --version	 Show program's version number and exit"
+	echo "	FILE			 Filename of current stream; not actually used but comes in handy when debugging"
 	echo
 	echo "This script translates input from stdin to stdout only. The option '--forbidden' "
 	echo "are only used with the 'clean' command."
@@ -61,9 +61,9 @@ function show_version {
 }
 
 function log_line {
-  if [[ $DO_LOG = 1 ]]; then
-    printf "%s\n" "$@">>$SCRATCH/tmp.log
-  fi
+	if [[ $DO_LOG = 1 ]]; then
+		printf "%s\n" "$@">>$SCRATCH/tmp.log
+	fi
 }
 
 function ERROR {
@@ -86,15 +86,15 @@ else
 	usage "missing command"
 fi
 while (( $# > 0 )) ; do
-  case $1 in
-	-f | --forbidden) [[ $# > 1 ]] || usage "FORBIDDEN argument expected after $1"; FORBIDDEN_TEXT=$2; shift;;
-	-l | --log) DO_LOG=1;;
-	-h | -\? | --help) usage;;
-	-v | --version) show_version;exit 0;;
-	-*) usage "Unrecognized switch '$1'";;
-	*) FILE=$1;;
-  esac
-  shift
+	case $1 in
+		-f | --forbidden) [[ $# > 1 ]] || usage "FORBIDDEN argument expected after $1"; FORBIDDEN_TEXT=$2; shift;;
+		-l | --log) DO_LOG=1;;
+		-h | -\? | --help) usage;;
+		-v | --version) show_version;exit 0;;
+		-*) usage "Unrecognized switch '$1'";;
+		*) FILE=$1;;
+	esac
+	shift
 done
 IFS=:
 if [[ $FORBIDDEN_TEXT = "-" ]]; then
