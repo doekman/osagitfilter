@@ -41,6 +41,8 @@ Some git-clients, like GitHub Desktop, can be quite chatty so log files grow qui
 
 Default, it prevents from accidently committing AppleScript files with Debugging Mode (from [AppleScript Debugger][asdbg]) switched on. Run `osagitfilter --help` to see more options.
 
+I've setup a [demo repository][demo] with different `.scpt`-files.
+
 
 Problems
 --------
@@ -63,3 +65,4 @@ Based on [this answer by Daniel Trebbien][so-ascr-in-git] on stackoverflow and h
 [asdbg-forum]: http://forum.latenightsw.com/t/cross-play-between-script-debugger-and-script-editor/834/5
 [gitconfig]: https://git-scm.com/docs/git-config
 [gitattributes]: https://git-scm.com/book/en/v2/Customizing-Git-Git-Attributes
+[demo]: https://github.com/doekman/osagitfilter-demo
