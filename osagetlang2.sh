@@ -8,20 +8,20 @@ if [[ $# != 1 ]]; then
 	exit 1
 fi
 
-script_file=$1
+script_file="$1"
 if [[ ! -r "$script_file" ]]; then
 	echo "Script file doesn't exist or can't be read"
 	exit 1
 fi
 
-header_length=8
-script_content=$(head -c $header_length "$1")
-if [[ ${script_content:0:7} == "FasdUAS" ]]; then
+header_length=16
+script_content=$(head -c "$header_length" "$1")
+if [[ ${script_content:0:16} == "FasdUAS 1.101.10" ]]; then
 	echo "AppleScript"
 elif [[ ${script_content:0:8} == "MarY3.00" ]]; then
 	echo "AppleScript Debugger"
 elif [[ ${script_content:0:8} == "JsOsaDAS" ]]; then
 	echo "JavaScript"
 else
-	echo "-" #Output for non-OSA file
+	echo "-" #Output for non-OSA files
 fi
