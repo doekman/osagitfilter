@@ -211,14 +211,15 @@ echo "started: $(date '+%Y-%m-%d %H:%M:%S')"
 echo
 
 #--| Determine OSA language tests
-lang_test "as.scpt"		"AppleScript"		   0 "Get language of an AppleScript file"
-lang_test "asdbg.scpt"	"AppleScript Debugger" 0 "Get language of an AppleScript Debugger file" $HAS_ASDBG
-lang_test "js.scpt"		"JavaScript"		   0 "Get language of an JavaScript file"
-lang_test "perl.scpt"	"Perl"				   1 "Get language of non-existing file"
-lang_test ""			""					   1 "Get language without arguments"
-lang_test "no-as.scpt"	"-"					   0 "Get language of a non-AppleScript file"
+lang_test "as.scpt"		"AppleScript"		     0 "Get language of an AppleScript file"
+lang_test "asdbg.scpt"	"AppleScript Debugger"   0 "Get language of an AppleScript Debugger file" $HAS_ASDBG
+lang_test "js.scpt"		"JavaScript"		     0 "Get language of an JavaScript file"
+lang_test "perl.scpt"	"Perl"				   127 "Get language of non-existing file"
+cmd=';osagetlang' 
+lang_test "$cmd"		""					     1 "Get language without arguments"
+lang_test "no-as.scpt"	"-"					     0 "Get language of a non-AppleScript file"
 cmd=';cd '$TEST_FILES_DIR'; osagetlang as.scpt' 
-lang_test "$cmd"		"AppleScript"		   0 "Get language of an AppleScript file (relative path)"
+lang_test "$cmd"		"AppleScript"		     0 "Get language of an AppleScript file (relative path)"
 
 #--| Instrumentarium to generate a test-error.
 if (( TEST_ERROR == 1 )); then
