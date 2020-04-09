@@ -29,7 +29,7 @@ function abs_file_path {
 
 function osagetlang_via_osakit {
 	local script_posix_path="$1"
-	osascript - "$script_posix_path" <<END_OF_APPLESCRIPT
+	osascript - "$script_posix_path" <<'END_OF_APPLESCRIPT'
 	use AppleScript version "2.4"
 	use scripting additions
 	use framework "Foundation"
